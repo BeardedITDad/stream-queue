@@ -161,9 +161,12 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Secret Admin Toggle */}
-      <div className="max-w-4xl mx-auto w-full mt-10 text-center">
-        <button onClick={handleAdminUnlock} className="text-gray-700 hover:text-gray-500 text-xs transition">
+{/* Footer & Secret Admin Toggle */}
+      <div className="max-w-4xl mx-auto w-full mt-10 text-center flex flex-col items-center gap-2">
+        <p className="text-gray-400 text-sm">
+          Created by <a href="https://youtube.com/@TylerRamsbey" target="_blank" rel="noreferrer" className="text-blue-400 hover:text-blue-300 hover:underline font-semibold transition">Tyler Ramsbey</a>. Open-source and free to use.
+        </p>
+        <button onClick={handleAdminUnlock} className="text-gray-800 hover:text-gray-600 text-xs transition mt-4">
           Admin Login
         </button>
       </div>
