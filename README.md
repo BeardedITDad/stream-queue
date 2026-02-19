@@ -5,6 +5,9 @@ Created by [Tyler Ramsbey](https://youtube.com/@TylerRamsbey). This is an open-s
 
 It allows viewers to submit their links to a live queue that updates in real-time on stream. It also includes an automated "Jump the Line" feature where viewers can donate via Ko-fi with a unique 4-digit code to automatically be bumped to the top of the queue!
 
+<img width="1014" height="460" alt="image" src="https://github.com/user-attachments/assets/d9db97e7-93f1-4972-bdd1-2e7b575480e7" />
+
+
 Features
 ----------
 
