@@ -2,7 +2,6 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 
-// Define our TypeScript interfaces so Next.js knows what our data looks like
 interface QueueItem {
   id: string;
   name: string;
@@ -20,7 +19,6 @@ interface FormData {
   url3: string;
 }
 
-// Initialize Supabase (The '!' tells TypeScript we promise these environment variables exist)
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -30,37 +28,31 @@ export default function Home() {
   const [queue, setQueue] = useState<QueueItem[]>([]);
   const [formData, setFormData] = useState<FormData>({ name: '', url1: '', url2: '', url3: '' });
   const [assignedCode, setAssignedCode] = useState<string | null>(null);
+  
+  // New Admin State
+  const [adminPassword, setAdminPassword] = useState<string | null>(null);
 
-  // Fetch queue on load and subscribe to real-time database changes
   useEffect(() => {
     fetchQueue();
-    
     const channel = supabase.channel('public:queue')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'queue' }, () => {
-        fetchQueue();
-      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'queue' }, fetchQueue)
       .subscribe();
-      
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return () => { supabase.removeChannel(channel); };
   }, []);
 
   const fetchQueue = async () => {
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from('queue')
       .select('*')
       .eq('status', 'waiting')
       .order('is_priority', { ascending: false })
       .order('created_at', { ascending: true });
-      
     if (data) setQueue(data as QueueItem[]);
-    if (error) console.error("Error fetching queue:", error);
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const shortId = Math.floor(1000 + Math.random() * 9000).toString(); // Generate 4-digit code
+    const shortId = Math.floor(1000 + Math.random() * 9000).toString();
     
     const { error } = await supabase.from('queue').insert([{ 
       name: formData.name, 
@@ -73,17 +65,40 @@ export default function Home() {
     if (!error) {
       setAssignedCode(shortId);
       setFormData({ name: '', url1: '', url2: '', url3: '' });
-    } else {
-      console.error("Error submitting to queue:", error);
     }
   };
 
+  // --- NEW: Handle Admin Unlock ---
+  const handleAdminUnlock = () => {
+    const pass = prompt("Enter Admin Password:");
+    if (pass) setAdminPassword(pass);
+  };
+
+  // --- NEW: Handle Deletion ---
+  const handleRemove = async (id: string) => {
+    if (!adminPassword) return;
+
+    const res = await fetch('/api/remove', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, password: adminPassword })
+    });
+
+    if (res.status === 401) {
+      alert("Wrong password!");
+      setAdminPassword(null); // Kick them out of admin mode
+    } else if (!res.ok) {
+      alert("Something went wrong removing the user.");
+    }
+    // If successful, the Supabase real-time subscription will automatically remove them from the screen!
+  };
+
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-10 font-sans">
-      <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-10">
+    <div className="min-h-screen bg-gray-900 text-white p-10 font-sans flex flex-col justify-between">
+      <div className="max-w-4xl mx-auto w-full grid grid-cols-1 md:grid-cols-2 gap-10">
         
         {/* Submission Form */}
-        <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
+        <div className="bg-gray-800 p-6 rounded-lg shadow-lg h-fit">
           <h2 className="text-2xl font-bold mb-4">Submit for Review</h2>
           {assignedCode ? (
             <div className="bg-green-600/20 border border-green-500 p-4 rounded text-center">
@@ -104,26 +119,53 @@ export default function Home() {
         </div>
 
         {/* The Live Queue */}
-        <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
-          <h2 className="text-2xl font-bold mb-4">Live Queue</h2>
+        <div className="bg-gray-800 p-6 rounded-lg shadow-lg h-fit">
+          <div className="flex justify-between items-center mb-4">
+             <h2 className="text-2xl font-bold">Live Queue</h2>
+             {adminPassword && <span className="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded border border-red-500">Admin Mode Active</span>}
+          </div>
+          
           <div className="flex flex-col gap-3">
             {queue.length === 0 && <p className="text-gray-400 italic">Queue is empty. Be the first!</p>}
             {queue.map((user, index) => (
-              <div key={user.id} className={`p-4 rounded border ${user.is_priority ? 'bg-yellow-500/10 border-yellow-500' : 'bg-gray-700 border-gray-600'}`}>
-                <div className="flex justify-between items-center">
-                  <span className="font-bold text-lg">#{index + 1} - {user.name}</span>
-                  {user.is_priority && <span className="text-xs bg-yellow-500 text-black px-2 py-1 font-black rounded uppercase tracking-wider">Priority</span>}
+              <div key={user.id} className={`p-4 rounded border flex justify-between ${user.is_priority ? 'bg-yellow-500/10 border-yellow-500' : 'bg-gray-700 border-gray-600'}`}>
+                
+                <div className="w-full">
+                  <div className="flex justify-between items-center">
+                    <span className="font-bold text-lg">#{index + 1} - {user.name}</span>
+                    {user.is_priority && <span className="text-xs bg-yellow-500 text-black px-2 py-1 font-black rounded uppercase tracking-wider">Priority</span>}
+                  </div>
+                  <div className="text-sm text-blue-400 mt-2 flex flex-col gap-1 overflow-hidden">
+                    <a href={user.url1} target="_blank" rel="noreferrer" className="truncate hover:underline">{user.url1}</a>
+                    {user.url2 && <a href={user.url2} target="_blank" rel="noreferrer" className="truncate hover:underline">{user.url2}</a>}
+                    {user.url3 && <a href={user.url3} target="_blank" rel="noreferrer" className="truncate hover:underline">{user.url3}</a>}
+                  </div>
                 </div>
-                <div className="text-sm text-blue-400 mt-2 flex flex-col gap-1 overflow-hidden">
-                  <a href={user.url1} target="_blank" rel="noreferrer" className="truncate hover:underline">{user.url1}</a>
-                  {user.url2 && <a href={user.url2} target="_blank" rel="noreferrer" className="truncate hover:underline">{user.url2}</a>}
-                  {user.url3 && <a href={user.url3} target="_blank" rel="noreferrer" className="truncate hover:underline">{user.url3}</a>}
-                </div>
+
+                {/* Admin Remove Button */}
+                {adminPassword && (
+                  <div className="ml-4 flex items-center border-l border-gray-600 pl-4">
+                    <button 
+                      onClick={() => handleRemove(user.id)}
+                      className="bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-3 rounded transition"
+                      title="Remove from queue"
+                    >
+                      X
+                    </button>
+                  </div>
+                )}
+
               </div>
             ))}
           </div>
         </div>
+      </div>
 
+      {/* Secret Admin Toggle */}
+      <div className="max-w-4xl mx-auto w-full mt-10 text-center">
+        <button onClick={handleAdminUnlock} className="text-gray-700 hover:text-gray-500 text-xs transition">
+          Admin Login
+        </button>
       </div>
     </div>
   );
