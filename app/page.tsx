@@ -103,7 +103,7 @@ export default function Home() {
           {assignedCode ? (
             <div className="bg-green-600/20 border border-green-500 p-4 rounded text-center">
               <h3 className="text-xl font-bold text-green-400">You are in the queue!</h3>
-              <p className="mt-2 text-gray-300">To jump ahead, donate at <strong>ko-fi.com/tylerramsbey</strong> and include this exact code in your message:</p>
+              <p className="mt-2 text-gray-300">To jump ahead, donate at <strong>https://ko-fi.com/thebeardeditdad</strong> and include this exact code in your message:</p>
               <p className="text-4xl font-black text-white my-4 tracking-widest">{assignedCode}</p>
               <button onClick={() => setAssignedCode(null)} className="text-sm underline text-gray-400 hover:text-white mt-2">Submit another</button>
             </div>
