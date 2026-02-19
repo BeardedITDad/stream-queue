@@ -1,36 +1,97 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+Live Stream Queue & Priority Review App
+==========================================
 
-## Getting Started
+Created by [Tyler Ramsbey](https://youtube.com/@TylerRamsbey). This is an open-source, real-time queue system built for live streamers who do portfolio, resume, or code reviews.
 
-First, run the development server:
+It allows viewers to submit their links to a live queue that updates in real-time on stream. It also includes an automated "Jump the Line" feature where viewers can donate via Ko-fi with a unique 4-digit code to automatically be bumped to the top of the queue!
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+Features
+----------
+
+-   **Real-Time Updates:** The queue updates instantly for all viewers without refreshing, powered by Supabase.
+
+-   **Automated Priority:** Seamless Ko-fi webhook integration automatically bumps donating viewers to the top.
+
+-   **Hidden Admin Mode:** Secret passcode login on the frontend to manage and remove completed reviews.
+
+-   **Free to Host:** Designed to run entirely on the free tiers of Vercel and Supabase.
+
+* * * * *
+
+Step-by-Step Setup Guide
+----------------------------
+
+To set this up for your own stream, you will need free accounts on **GitHub**, **Supabase**, and **Vercel**.
+
+### Step 1: Set up the Database (Supabase)
+
+1.  Go to [Supabase](https://supabase.com/) and create a new project.
+
+2.  In your project, go to the **SQL Editor** on the left menu.
+
+3.  Paste and run the following SQL command to create your table, enable real-time updates, and allow public submissions:
+
+SQL
+
+```
+CREATE TABLE queue (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  short_id TEXT NOT NULL,
+  name TEXT NOT NULL,
+  url1 TEXT NOT NULL,
+  url2 TEXT,
+  url3 TEXT,
+  is_priority BOOLEAN DEFAULT FALSE,
+  status TEXT DEFAULT 'waiting',
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
+);
+
+-- Turn on Realtime for the stream overlay
+ALTER PUBLICATION supabase_realtime ADD TABLE queue;
+
+-- Allow public submissions from your viewers
+ALTER TABLE queue DISABLE ROW LEVEL SECURITY;
+
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+1.  Go to **Project Settings -> API** and keep this tab open. You will need the `Project URL` and the `anon public key` in the next step.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Step 2: Deploy the App (Vercel)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1.  Fork this repository to your own GitHub account.
 
-## Learn More
+2.  Go to [Vercel](https://vercel.com/) and click **Add New... -> Project**.
 
-To learn more about Next.js, take a look at the following resources:
+3.  Import your newly forked GitHub repository.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+4.  Before clicking Deploy, open the **Environment Variables** section and add the following three variables:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+    -   `NEXT_PUBLIC_SUPABASE_URL`: (Paste your Supabase Project URL here)
 
-## Deploy on Vercel
+    -   `NEXT_PUBLIC_SUPABASE_ANON_KEY`: (Paste your Supabase anon public key here)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+    -   `ADMIN_PASSWORD`: (Create a secret password to manage your queue, e.g., `super_secret_stream_pass`)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+5.  Click **Deploy**!
+
+### Step 3: Connect Ko-fi Donations
+
+To enable the automatic "Jump the Line" feature, you need to tell Ko-fi to talk to your new app.
+
+1.  Copy your new live Vercel domain (e.g., `https://your-app.vercel.app`).
+
+2.  Go to your Ko-fi account -> **Settings -> API / Webhooks**.
+
+3.  Paste your domain and add `/api/kofi` to the end of it. *(Example: `https://your-app.vercel.app/api/kofi`)*
+
+4.  Click **Update** and send a test webhook.
+
+### Step 4: How to Manage Your Queue (Admin Mode)
+
+1.  Go to your live website.
+
+2.  Scroll to the absolute bottom and click the tiny "Admin Login" text.
+
+3.  Enter the `ADMIN_PASSWORD` you set in Vercel.
+
+4.  Red "X" buttons will appear next to everyone's name, allowing you to remove them as you finish their reviews on stream. 
