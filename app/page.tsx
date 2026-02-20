@@ -181,7 +181,7 @@ export default function Home() {
                   <div className="text-sm text-blue-400 mt-2 flex flex-col gap-1 overflow-hidden">
                     <a href={user.url1} target="_blank" rel="noreferrer" className="truncate hover:underline">{user.url1}</a>
                     {user.url2 && <a href={user.url2} target="_blank" rel="noreferrer" className="truncate hover:underline">{user.url2}</a>}
-                    {user.url3 && <a href={user.url3} target="_blank" rel="noreferrer" className="truncate hover:underline">{user.url3}</a>}
+                    {user.url3 && (<p className="text-gray-300 text-xs italic mt-1 border-l-2 border-gray-500 pl-2 break-words">"{user.url3}"</p>)</a>}
                   </div>
                 </div>
 
