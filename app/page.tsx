@@ -100,7 +100,7 @@ export default function Home() {
   
   {/* Clickable Logo */}
   <a 
-    href="https://YOUR-LINK-HERE.com" 
+    href="https://itcareeraccelerator.com/" 
     target="_blank" 
     rel="noopener noreferrer"
     className="hover:scale-105 transition-transform duration-200"
@@ -116,7 +116,7 @@ export default function Home() {
   <div className="text-center -mt-6 mb-10">
     <p className="text-gray-400 text-sm mb-1">Waiting for a review?</p>
     <a 
-      href="https://YOUR-LINK-HERE.com" 
+      href="https://itcareeraccelerator.com/" 
       target="_blank"
       className="text-[#ff6600] font-bold underline decoration-[#ff6600] underline-offset-4 hover:text-orange-400 transition"
     >
