@@ -94,9 +94,9 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-10 font-sans flex flex-col justify-between">
+    <div className="min-h-screen bg-[#292e3d] text-white p-10 font-sans flex flex-col justify-between">
       {/* --- INSERT LOGO HERE --- */}
-    <div className="flex justify-center w-full mb-0">
+    <div className="flex justify-center w-full -mb-6">
       <img 
         src="/IT CAREER (1024 x 500 px).png" 
         alt="IT Career Accelerator" 
