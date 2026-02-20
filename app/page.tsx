@@ -96,7 +96,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-[#292e3d] text-white p-10 font-sans flex flex-col justify-between">
      {/* --- LOGO & LINK SECTION START --- */}
-<div className="flex flex-col items-center w-full -mb-10 z-20 relative">
+<div className="flex flex-col items-center w-full -mb-0 z-20 relative">
   
   {/* Clickable Logo */}
   <a 
@@ -113,7 +113,7 @@ export default function Home() {
   </a>
 
   {/* Subtitle Text Link */}
-  <div className="text-center -mt-6 mb-10">
+  <div className="text-center -mt-6 -mb-20">
     <p className="text-gray-400 text-sm mb-1">Waiting for a review?</p>
     <a 
       href="https://itcareeraccelerator.com/" 
