@@ -114,7 +114,7 @@ export default function Home() {
       <div className="text-center -mt-16 mb-10 relative z-20">
         <p className="text-gray-400 mb-2">Waiting for a review?</p>
         <a href="https://itcareeraccelerator.com/" className="text-[#ff6600] font-bold underline decoration-[#ff6600] underline-offset-4 hover:text-orange-400 transition">
-      Check out the full IT Career Accelerator Course &rarr;
+      Check out the full IT Career Accelerator community &rarr;
           </a>
       </div>
       {/* ------------------------- */}
