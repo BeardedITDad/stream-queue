@@ -100,7 +100,7 @@ export default function Home() {
       <img 
         src="/IT CAREER (1024 x 500 px).png" 
         alt="IT Career Accelerator" 
-        className="h-24 w-auto object-contain" 
+        className="h-40 w-auto object-contain" 
       />
     </div>
     {/* ------------------------ */}
