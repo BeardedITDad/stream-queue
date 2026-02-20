@@ -48,7 +48,7 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-#292e3d text-white p-10 font-sans">
+    <div className="min-h-screen bg-[#292e3d] text-white p-10 font-sans">
     {/* --- INSERT LOGO HERE --- */}
     <div className="flex justify-center w-full -mb-20">
       <img 
