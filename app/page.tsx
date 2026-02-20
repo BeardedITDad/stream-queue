@@ -113,7 +113,7 @@ export default function Home() {
   </a>
 
   {/* Subtitle Text Link */}
-  <div className="text-center mt-0 mb-2">
+  <div className="text-center mt-0 -mb-2">
     <p className="text-gray-400 text-sm mb-1">Waiting for a review?</p>
     <a 
       href="https://itcareeraccelerator.com/" 
