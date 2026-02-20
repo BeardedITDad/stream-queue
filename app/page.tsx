@@ -178,11 +178,22 @@ export default function Home() {
                     <span className="font-bold text-lg">#{index + 1} - {user.name}</span>
                     {user.is_priority && <span className="text-xs bg-yellow-500 text-black px-2 py-1 font-black rounded uppercase tracking-wider">Priority</span>}
                   </div>
-                  <div className="text-sm text-blue-400 mt-2 flex flex-col gap-1 overflow-hidden">
-                    <a href={user.url1} target="_blank" rel="noreferrer" className="truncate hover:underline">{user.url1}</a>
-                    {user.url2 && <a href={user.url2} target="_blank" rel="noreferrer" className="truncate hover:underline">{user.url2}</a>}
-                    {user.url3 && (<p className="text-gray-300 text-xs italic mt-1 border-l-2 border-gray-500 pl-2 break-words">"{user.url3}"</p>)</a>}
-                  </div>
+                <div className="text-sm text-blue-400 mt-2 flex flex-col gap-1 overflow-hidden">
+  
+                  {/* URL 1 */}
+                  <a href={user.url1} target="_blank" rel="noreferrer" className="truncate hover:underline">{user.url1}</a>
+  
+                  {/* URL 2 */}
+                  {user.url2 && <a href={user.url2} target="_blank" rel="noreferrer" className="truncate hover:underline">{user.url2}</a>}
+  
+                  {/* URL 3 (Question/Context - NO LINK TAG HERE) */}
+                  {user.url3 && (
+                    <p className="text-gray-300 text-xs italic mt-1 border-l-2 border-gray-500 pl-2 break-words">
+                      "{user.url3}"
+                    </p>
+                   )}
+
+                </div>
                 </div>
 
                 {/* Admin Remove Button */}
