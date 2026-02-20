@@ -95,6 +95,15 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white p-10 font-sans flex flex-col justify-between">
+      {/* --- INSERT LOGO HERE --- */}
+    <div className="flex justify-center w-full mb-8">
+      <img 
+        src="/IT CAREER (1024 x 500 px).png" 
+        alt="IT Career Accelerator" 
+        className="h-24 w-auto object-contain" 
+      />
+    </div>
+    {/* ------------------------ */}
       <div className="max-w-4xl mx-auto w-full grid grid-cols-1 md:grid-cols-2 gap-10">
         
         {/* Submission Form */}
