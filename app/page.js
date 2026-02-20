@@ -48,9 +48,9 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-10 font-sans">
+    <div className="min-h-screen bg-#292e3d text-white p-10 font-sans">
     {/* --- INSERT LOGO HERE --- */}
-    <div className="flex justify-center w-full mb-8">
+    <div className="flex justify-center w-full -mb-20">
       <img 
         src="/IT CAREER (1024 x 500 px).png" 
         alt="IT Career Accelerator" 
