@@ -49,15 +49,37 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-[#292e3d] text-white p-10 font-sans">
-    {/* --- INSERT LOGO HERE --- */}
-    <div className="flex justify-center w-full -mb-20">
-      <img 
-        src="/IT CAREER (1024 x 500 px).png" 
-        alt="IT Career Accelerator" 
-        className="h-24 w-auto object-contain" 
-      />
-    </div>
-    {/* ------------------------ */}
+    {/* --- LOGO & LINK SECTION START --- */}
+<div className="flex flex-col items-center w-full mb-6 z-20 relative">
+  
+  {/* Clickable Logo */}
+  <a 
+    href="https://itcareeraccelerator.com/" 
+    target="_blank" 
+    rel="noopener noreferrer"
+    className="hover:scale-105 transition-transform duration-200"
+  >
+    <img 
+      src="/IT CAREER (1024 x 500 px).png" 
+      alt="IT Career Accelerator" 
+      className="h-40 w-auto object-contain" 
+    />
+  </a>
+
+  {/* Subtitle Text Link */}
+  <div className="text-center mt-0 -mb-2">
+    <p className="text-gray-400 text-sm mb-1">Waiting for a review?</p>
+    <a 
+      href="https://itcareeraccelerator.com/" 
+      target="_blank"
+      className="text-[#ff6600] font-bold underline decoration-[#ff6600] underline-offset-4 hover:text-orange-400 transition"
+    >
+      Check out the full IT Career Accelerator Community &rarr;
+    </a>
+  </div>
+
+</div>
+{/* --- LOGO & LINK SECTION END --- */}
       <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-10">
         
         {/* Submission Form */}
@@ -75,8 +97,21 @@ export default function Home() {
               <input required placeholder="Your Name / Handle" className="p-2 bg-gray-700 rounded" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
               <input required placeholder="URL 1 (LinkedIn, GitHub, etc)" className="p-2 bg-gray-700 rounded" value={formData.url1} onChange={e => setFormData({...formData, url1: e.target.value})} />
               <input placeholder="URL 2 (Optional)" className="p-2 bg-gray-700 rounded" value={formData.url2} onChange={e => setFormData({...formData, url2: e.target.value})} />
-              <input placeholder="URL 3 (Optional)" className="p-2 bg-gray-700 rounded" value={formData.url3} onChange={e => setFormData({...formData, url3: e.target.value})} />
-              <button type="submit" className="bg-blue-600 hover:bg-blue-500 font-bold p-3 rounded transition">Join Queue</button>
+              <input placeholder="URL 2 (Optional)" className="p-2 bg-gray-700 rounded text-white" value={formData.url2} onChange={e => setFormData({...formData, url2: e.target.value})} />
+              {/* Changed URL 3 to a Question box */}
+              <textarea 
+                placeholder="Any specific questions or context?" 
+                className="p-2 bg-gray-700 rounded text-white h-24 resize-none" 
+                value={formData.url3} 
+                onChange={e => setFormData({...formData, url3: e.target.value})} 
+              />
+              <button type="submit" className="bg-blue-600 hover:bg-blue-500 font-bold p-3 rounded transition mt-2">Join Queue</button>
+              {/* Disclaimer Text */}
+              <p className="text-xs text-gray-500 text-center mt-3 leading-tight">
+                By clicking "Join Queue", you agree that your information will be 
+                <span className="text-gray-400 font-semibold"> displayed publicly</span> and 
+                reviewed on <span className="text-gray-400 font-semibold">live stream</span>.
+              </p>
             </form>
           )}
         </div>
