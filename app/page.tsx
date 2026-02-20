@@ -95,29 +95,37 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-[#292e3d] text-white p-10 font-sans flex flex-col justify-between">
-      {/* --- INSERT LOGO HERE --- */}
-    <div className="flex justify-center w-full -mb-20">
-      <a 
-    href="https://itcareeraccelerator.com/" 
+     {/* --- LOGO & LINK SECTION START --- */}
+<div className="flex flex-col items-center w-full -mb-10 z-20 relative">
+  
+  {/* Clickable Logo */}
+  <a 
+    href="https://YOUR-LINK-HERE.com" 
     target="_blank" 
     rel="noopener noreferrer"
     className="hover:scale-105 transition-transform duration-200"
   >
-      <img 
-        src="/IT CAREER (1024 x 500 px).png" 
-        alt="IT Career Accelerator" 
-        className="h-40 w-auto object-contain" 
-      />
-    </div>
-    {/* ------------------------ */}
-    {/* --- NEW SUBTITLE LINK --- */}
-      <div className="text-center -mt-16 mb-10 relative z-20">
-        <p className="text-gray-400 mb-2">Waiting for a review?</p>
-        <a href="https://itcareeraccelerator.com/" className="text-[#ff6600] font-bold underline decoration-[#ff6600] underline-offset-4 hover:text-orange-400 transition">
-      Check out the full IT Career Accelerator community &rarr;
-          </a>
-      </div>
-      {/* ------------------------- */}
+    <img 
+      src="/IT CAREER (1024 x 500 px).png" 
+      alt="IT Career Accelerator" 
+      className="h-40 w-auto object-contain" 
+    />
+  </a>
+
+  {/* Subtitle Text Link */}
+  <div className="text-center -mt-6 mb-10">
+    <p className="text-gray-400 text-sm mb-1">Waiting for a review?</p>
+    <a 
+      href="https://YOUR-LINK-HERE.com" 
+      target="_blank"
+      className="text-[#ff6600] font-bold underline decoration-[#ff6600] underline-offset-4 hover:text-orange-400 transition"
+    >
+      Check out the full IT Career Accelerator Community &rarr;
+    </a>
+  </div>
+
+</div>
+{/* --- LOGO & LINK SECTION END --- */}
       <div className="max-w-4xl mx-auto w-full grid grid-cols-1 md:grid-cols-2 gap-10">
         
         {/* Submission Form */}
