@@ -97,6 +97,12 @@ export default function Home() {
     <div className="min-h-screen bg-[#292e3d] text-white p-10 font-sans flex flex-col justify-between">
       {/* --- INSERT LOGO HERE --- */}
     <div className="flex justify-center w-full -mb-20">
+      <a 
+    href="https://itcareeraccelerator.com/" 
+    target="_blank" 
+    rel="noopener noreferrer"
+    className="hover:scale-105 transition-transform duration-200"
+  >
       <img 
         src="/IT CAREER (1024 x 500 px).png" 
         alt="IT Career Accelerator" 
@@ -104,6 +110,14 @@ export default function Home() {
       />
     </div>
     {/* ------------------------ */}
+    {/* --- NEW SUBTITLE LINK --- */}
+      <div className="text-center -mt-16 mb-10 relative z-20">
+        <p className="text-gray-400 mb-2">Waiting for a review?</p>
+        <a href="https://itcareeraccelerator.com/" className="text-[#ff6600] font-bold underline decoration-[#ff6600] underline-offset-4 hover:text-orange-400 transition">
+      Check out the full IT Career Accelerator Course &rarr;
+          </a>
+      </div>
+      {/* ------------------------- */}
       <div className="max-w-4xl mx-auto w-full grid grid-cols-1 md:grid-cols-2 gap-10">
         
         {/* Submission Form */}
