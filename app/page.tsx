@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
+import Image from 'next/image'; // <-- NEW: Imported Next.js Image component
 
 interface QueueItem {
   id: string;
@@ -95,6 +96,30 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white p-10 font-sans flex flex-col justify-between">
+      
+      {/* --- NEW: Header Section --- */}
+      <div className="max-w-4xl mx-auto w-full flex flex-col items-center mb-10 text-center">
+        <Image
+          src="/logo.png" 
+          alt="Hack Smarter Logo"
+          width={250} 
+          height={60}
+          className="mb-4"
+        />
+        <p className="text-lg text-gray-300">
+          While you wait for the review, go hack some labs at{' '}
+          <a 
+            href="https://hacksmarter.org" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-blue-500 hover:text-blue-400 hover:underline transition-colors font-semibold"
+          >
+            hacksmarter.org
+          </a>!
+        </p>
+      </div>
+      {/* -------------------------- */}
+
       <div className="max-w-4xl mx-auto w-full grid grid-cols-1 md:grid-cols-2 gap-10">
         
         {/* Submission Form */}
@@ -161,7 +186,7 @@ export default function Home() {
         </div>
       </div>
 
-{/* Footer & Secret Admin Toggle */}
+      {/* Footer & Secret Admin Toggle */}
       <div className="max-w-4xl mx-auto w-full mt-10 text-center flex flex-col items-center gap-2">
         <p className="text-gray-400 text-sm">
           Created by <a href="https://youtube.com/@TylerRamsbey" target="_blank" rel="noreferrer" className="text-blue-400 hover:text-blue-300 hover:underline font-semibold transition">Tyler Ramsbey</a>. Open-source and free to use.
