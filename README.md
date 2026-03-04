@@ -15,8 +15,6 @@ Features
 
 -   **Automated Priority:** Seamless Ko-fi webhook integration automatically bumps donating viewers to the top.
 
--   **Manual Priority Override:** In Admin Mode, you can manually mark someone as priority if they donated but submitted the wrong Ko-fi code.
-
 -   **Hidden Admin Mode:** Secret passcode login on the frontend to manage and remove completed reviews.
 
 -   **Free to Host:** Designed to run entirely on the free tiers of Vercel and Supabase.
@@ -99,4 +97,4 @@ To enable the automatic "Jump the Line" feature, you need to tell Ko-fi to talk 
 
 3.  Enter the `ADMIN_PASSWORD` you set in Vercel.
 
-4.  A **Priority** button appears for non-priority users (to manually bump them), and red "X" buttons let you remove users as you finish reviews on stream. 
+4.  Red "X" buttons will appear next to everyone's name, allowing you to remove them as you finish their reviews on stream. 
