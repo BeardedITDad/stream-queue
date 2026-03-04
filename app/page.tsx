@@ -93,24 +93,7 @@ export default function Home() {
     // If successful, the Supabase real-time subscription will automatically remove them from the screen!
   };
 
-  const handleSetPriority = async (id: string) => {
-    if (!adminPassword) return;
-
-    const res = await fetch('/api/priority', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, password: adminPassword, isPriority: true })
-    });
-
-    if (res.status === 401) {
-      alert("Wrong password!");
-      setAdminPassword(null);
-    } else if (!res.ok) {
-      alert("Something went wrong setting priority.");
-    }
-  };
-
-  return (
+    return (
     <div className="min-h-screen bg-[#292e3d] text-white p-10 font-sans flex flex-col justify-between">
      {/* --- LOGO & LINK SECTION START --- */}
 <div className="flex flex-col items-center w-full mb-6 z-20 relative">
@@ -216,24 +199,13 @@ export default function Home() {
                 {/* Admin Remove Button */}
                 {adminPassword && (
                   <div className="ml-4 flex items-center border-l border-gray-600 pl-4">
-                    <div className="flex flex-col gap-2">
-                      {!user.is_priority && (
-                        <button
-                          onClick={() => handleSetPriority(user.id)}
-                          className="bg-yellow-500 hover:bg-yellow-400 text-black font-bold py-2 px-3 rounded transition"
-                          title="Set as priority"
-                        >
-                          Priority
-                        </button>
-                      )}
-                      <button 
-                        onClick={() => handleRemove(user.id)}
-                        className="bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-3 rounded transition"
-                        title="Remove from queue"
-                      >
-                        X
-                      </button>
-                    </div>
+                    <button 
+                      onClick={() => handleRemove(user.id)}
+                      className="bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-3 rounded transition"
+                      title="Remove from queue"
+                    >
+                      X
+                    </button>
                   </div>
                 )}
 
