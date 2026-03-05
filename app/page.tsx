@@ -157,6 +157,49 @@ export default function Home() {
     }
   };
 
+  const handleSetPriority = async (id: string) => {
+    if (!adminPassword) return;
+
+    const res = await fetch('/api/priority', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, password: adminPassword }),
+    });
+
+    if (res.status === 401) {
+      alert('Wrong password!');
+      setAdminPassword(null);
+      return;
+    }
+
+    if (!res.ok) {
+      alert('Something went wrong setting priority.');
+    }
+  };
+
+  const handleClearAll = async () => {
+    if (!adminPassword) return;
+
+    const confirmClear = confirm('Clear all queue entries?');
+    if (!confirmClear) return;
+
+    const res = await fetch('/api/clear', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: adminPassword }),
+    });
+
+    if (res.status === 401) {
+      alert('Wrong password!');
+      setAdminPassword(null);
+      return;
+    }
+
+    if (!res.ok) {
+      alert('Something went wrong clearing the queue.');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-900 text-white p-10 font-sans flex flex-col justify-between">
       <div className="max-w-4xl mx-auto w-full flex flex-col items-center mb-10 text-center">
@@ -217,18 +260,31 @@ export default function Home() {
 
         <div className="bg-gray-800 p-6 rounded-lg shadow-lg h-fit">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-bold">Live Queue</h2>
-            {adminPassword && (
-              <div className="flex items-center gap-2">
-                <span className="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded border border-red-500">Admin Mode Active</span>
+            <h2 className="text-2xl font-bold">Live Queue ({queue.length})</h2>
+            <div className="flex items-center gap-2">
+              <span className="text-xs bg-gray-700 text-gray-200 px-2 py-1 rounded border border-gray-600">
+                Total in list: {queue.length}
+              </span>
+              {adminPassword && (
+                <button
+                  onClick={handleClearAll}
+                  disabled={queue.length === 0}
+                  className="bg-red-700 hover:bg-red-600 disabled:bg-red-900/40 disabled:text-red-200/40 disabled:cursor-not-allowed text-white text-xs font-bold px-3 py-1 rounded border border-red-500 transition"
+                  title="Clear all queue entries"
+                >
+                  Clear All
+                </button>
+              )}
+              {adminPassword && (
                 <button
                   onClick={handleToggleSubmissions}
                   className={`text-xs font-bold px-2 py-1 rounded border transition ${submissionsOpen ? 'bg-amber-500/20 text-amber-300 border-amber-500 hover:bg-amber-500/30' : 'bg-green-500/20 text-green-300 border-green-500 hover:bg-green-500/30'}`}
                 >
                   {submissionsOpen ? 'Close Submissions' : 'Open Submissions'}
                 </button>
-              </div>
-            )}
+              )}
+              {adminPassword && <span className="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded border border-red-500">Admin Mode Active</span>}
+            </div>
           </div>
 
           <div className="flex flex-col gap-3">
@@ -249,13 +305,24 @@ export default function Home() {
 
                 {adminPassword && (
                   <div className="ml-4 flex items-center border-l border-gray-600 pl-4">
-                    <button
-                      onClick={() => handleRemove(user.id)}
-                      className="bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-3 rounded transition"
-                      title="Remove from queue"
-                    >
-                      X
-                    </button>
+                    <div className="flex flex-col gap-2">
+                      {!user.is_priority && (
+                        <button
+                          onClick={() => handleSetPriority(user.id)}
+                          className="bg-yellow-500 hover:bg-yellow-400 text-black font-bold py-2 px-3 rounded transition"
+                          title="Manually set this user to priority"
+                        >
+                          Priority
+                        </button>
+                      )}
+                      <button
+                        onClick={() => handleRemove(user.id)}
+                        className="bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-3 rounded transition"
+                        title="Remove from queue"
+                      >
+                        X
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
