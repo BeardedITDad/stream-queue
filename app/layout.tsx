@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Hack Smarter Review",
-  description: "Be reviewed on a Hack Smarter live stream!",
+  title: "LinkedIn Review",
+  description: "Be reviewed on a The Bearded I.T. Dad live stream!",
 };
 
 export default function RootLayout({
