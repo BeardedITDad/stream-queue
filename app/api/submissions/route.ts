@@ -5,53 +5,42 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-const SUBMISSIONS_SETTING_KEY = 'submissions_open';
+const TOGGLE_SHORT_ID = '__submissions_toggle__';
+const TOGGLE_STATUS = '__config__';
 
-function isSettingsTableMissing(error: unknown) {
-  if (!error || typeof error !== 'object') {
-    return false;
-  }
-
-  const maybeError = error as { code?: string; message?: string };
-  return (
-    maybeError.code === 'PGRST205' ||
-    maybeError.code === '42P01' ||
-    maybeError.message?.toLowerCase().includes('app_settings') === true
-  );
+interface ToggleRow {
+  id: string;
+  is_priority: boolean | null;
 }
 
-function isPermissionDenied(error: unknown) {
-  if (!error || typeof error !== 'object') {
-    return false;
-  }
-
-  const maybeError = error as { code?: string; message?: string };
-  return (
-    maybeError.code === '42501' ||
-    maybeError.message?.toLowerCase().includes('permission denied') === true
-  );
-}
-
-async function getSubmissionsOpen() {
+async function getToggleRows() {
   const { data, error } = await supabase
-    .from('app_settings')
-    .select('value_boolean')
-    .eq('key', SUBMISSIONS_SETTING_KEY)
-    .maybeSingle();
+    .from('queue')
+    .select('id, is_priority')
+    .eq('short_id', TOGGLE_SHORT_ID)
+    .eq('status', TOGGLE_STATUS)
+    .order('created_at', { ascending: true })
+    .limit(50);
 
   if (error) {
-    if (isSettingsTableMissing(error)) {
-      // Backward compatibility for installs that have not added app_settings yet.
-      return true;
-    }
     throw error;
   }
 
-  if (!data) {
+  return (data as ToggleRow[] | null) ?? [];
+}
+
+async function getToggleRow() {
+  const rows = await getToggleRows();
+  return rows[0] ?? null;
+}
+
+async function getSubmissionsOpen() {
+  const row = await getToggleRow();
+  if (!row) {
     return true;
   }
 
-  return data.value_boolean ?? true;
+  return row.is_priority ?? true;
 }
 
 export async function GET() {
@@ -76,33 +65,29 @@ export async function POST(req: Request) {
       return Response.json({ error: 'submissionsOpen must be a boolean.' }, { status: 400 });
     }
 
-    const { error } = await supabase.from('app_settings').upsert(
-      {
-        key: SUBMISSIONS_SETTING_KEY,
-        value_boolean: submissionsOpen,
-      },
-      { onConflict: 'key' }
-    );
+    const existingToggles = await getToggleRows();
+
+    // If already set to the requested value, avoid unnecessary database writes.
+    if (existingToggles.length > 0 && (existingToggles[0].is_priority ?? true) === submissionsOpen) {
+      return Response.json({ submissionsOpen, alreadyApplied: true }, { status: 200 });
+    }
+
+    const { error } = existingToggles.length > 0
+      ? await supabase
+          .from('queue')
+          .update({ is_priority: submissionsOpen })
+          .in('id', existingToggles.map((row) => row.id))
+      : await supabase.from('queue').insert([
+          {
+            short_id: TOGGLE_SHORT_ID,
+            name: 'SYSTEM_SUBMISSIONS_TOGGLE',
+            url1: 'https://stream-queue.local/config',
+            is_priority: submissionsOpen,
+            status: TOGGLE_STATUS,
+          },
+        ]);
 
     if (error) {
-      if (isSettingsTableMissing(error)) {
-        return Response.json(
-          {
-            error: 'Submission toggle requires the app_settings table. Run the README SQL setup for app_settings first.',
-          },
-          { status: 500 }
-        );
-      }
-
-      if (isPermissionDenied(error)) {
-        return Response.json(
-          {
-            error: 'Unable to update app_settings due database permissions. Disable RLS on app_settings or add insert/update policies.',
-          },
-          { status: 500 }
-        );
-      }
-
       throw error;
     }
 

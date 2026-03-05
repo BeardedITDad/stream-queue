@@ -49,26 +49,11 @@ CREATE TABLE queue (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
 );
 
--- Stores app-wide flags controlled by admin mode (for example, open/closed submissions)
-CREATE TABLE app_settings (
-  key TEXT PRIMARY KEY,
-  value_boolean BOOLEAN NOT NULL DEFAULT TRUE,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
-);
-
--- Default to accepting submissions
-INSERT INTO app_settings (key, value_boolean)
-VALUES ('submissions_open', TRUE)
-ON CONFLICT (key) DO NOTHING;
-
 -- Turn on Realtime for the stream overlay
 ALTER PUBLICATION supabase_realtime ADD TABLE queue;
 
 -- Allow public submissions from your viewers
 ALTER TABLE queue DISABLE ROW LEVEL SECURITY;
-
--- Allow app toggle reads/writes from this app's API routes
-ALTER TABLE app_settings DISABLE ROW LEVEL SECURITY;
 
 ```
 

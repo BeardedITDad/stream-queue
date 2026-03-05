@@ -5,51 +5,37 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-const SUBMISSIONS_SETTING_KEY = 'submissions_open';
+const TOGGLE_SHORT_ID = '__submissions_toggle__';
+const TOGGLE_STATUS = '__config__';
 
-function isSettingsTableMissing(error: unknown) {
-  if (!error || typeof error !== 'object') {
-    return false;
-  }
-
-  const maybeError = error as { code?: string; message?: string };
-  return (
-    maybeError.code === 'PGRST205' ||
-    maybeError.code === '42P01' ||
-    maybeError.message?.toLowerCase().includes('app_settings') === true
-  );
+interface ToggleRow {
+  is_priority: boolean | null;
 }
 
 async function getSubmissionsOpen() {
   const { data, error } = await supabase
-    .from('app_settings')
-    .select('value_boolean')
-    .eq('key', SUBMISSIONS_SETTING_KEY)
-    .maybeSingle();
+    .from('queue')
+    .select('is_priority')
+    .eq('short_id', TOGGLE_SHORT_ID)
+    .eq('status', TOGGLE_STATUS)
+    .order('created_at', { ascending: true })
+    .limit(1);
 
   if (error) {
-    if (isSettingsTableMissing(error)) {
-      // Backward compatibility for installs that have not added app_settings yet.
-      return true;
-    }
     throw error;
   }
 
-  if (!data) {
+  const row = (data?.[0] as ToggleRow | undefined) ?? null;
+  if (!row) {
     return true;
   }
 
-  return data.value_boolean ?? true;
+  return row.is_priority ?? true;
 }
 
 export async function POST(req: Request) {
   try {
-    let submissionsOpen = true;
-    try {
-      submissionsOpen = await getSubmissionsOpen();
-    } catch (settingError) {
-      console.warn('Submission setting lookup failed. Falling back to open submissions.', settingError);
-    }
+    const submissionsOpen = await getSubmissionsOpen();
 
     if (!submissionsOpen) {
       return Response.json(
