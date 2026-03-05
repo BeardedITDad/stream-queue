@@ -67,6 +67,9 @@ ALTER PUBLICATION supabase_realtime ADD TABLE queue;
 -- Allow public submissions from your viewers
 ALTER TABLE queue DISABLE ROW LEVEL SECURITY;
 
+-- Allow app toggle reads/writes from this app's API routes
+ALTER TABLE app_settings DISABLE ROW LEVEL SECURITY;
+
 ```
 
 1.  Go to **Project Settings -> API** and keep this tab open. You will need the `Project URL` and the `anon public key` in the next step.

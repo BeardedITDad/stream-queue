@@ -7,6 +7,19 @@ const supabase = createClient(
 
 const SUBMISSIONS_SETTING_KEY = 'submissions_open';
 
+function isSettingsTableMissing(error: unknown) {
+  if (!error || typeof error !== 'object') {
+    return false;
+  }
+
+  const maybeError = error as { code?: string; message?: string };
+  return (
+    maybeError.code === 'PGRST205' ||
+    maybeError.code === '42P01' ||
+    maybeError.message?.toLowerCase().includes('app_settings') === true
+  );
+}
+
 async function getSubmissionsOpen() {
   const { data, error } = await supabase
     .from('app_settings')
@@ -15,6 +28,10 @@ async function getSubmissionsOpen() {
     .maybeSingle();
 
   if (error) {
+    if (isSettingsTableMissing(error)) {
+      // Backward compatibility for installs that have not added app_settings yet.
+      return true;
+    }
     throw error;
   }
 
@@ -27,7 +44,13 @@ async function getSubmissionsOpen() {
 
 export async function POST(req: Request) {
   try {
-    const submissionsOpen = await getSubmissionsOpen();
+    let submissionsOpen = true;
+    try {
+      submissionsOpen = await getSubmissionsOpen();
+    } catch (settingError) {
+      console.warn('Submission setting lookup failed. Falling back to open submissions.', settingError);
+    }
+
     if (!submissionsOpen) {
       return Response.json(
         { error: 'Additional reviews are currently not being accepted.' },

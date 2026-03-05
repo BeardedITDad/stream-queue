@@ -7,6 +7,31 @@ const supabase = createClient(
 
 const SUBMISSIONS_SETTING_KEY = 'submissions_open';
 
+function isSettingsTableMissing(error: unknown) {
+  if (!error || typeof error !== 'object') {
+    return false;
+  }
+
+  const maybeError = error as { code?: string; message?: string };
+  return (
+    maybeError.code === 'PGRST205' ||
+    maybeError.code === '42P01' ||
+    maybeError.message?.toLowerCase().includes('app_settings') === true
+  );
+}
+
+function isPermissionDenied(error: unknown) {
+  if (!error || typeof error !== 'object') {
+    return false;
+  }
+
+  const maybeError = error as { code?: string; message?: string };
+  return (
+    maybeError.code === '42501' ||
+    maybeError.message?.toLowerCase().includes('permission denied') === true
+  );
+}
+
 async function getSubmissionsOpen() {
   const { data, error } = await supabase
     .from('app_settings')
@@ -15,6 +40,10 @@ async function getSubmissionsOpen() {
     .maybeSingle();
 
   if (error) {
+    if (isSettingsTableMissing(error)) {
+      // Backward compatibility for installs that have not added app_settings yet.
+      return true;
+    }
     throw error;
   }
 
@@ -56,6 +85,24 @@ export async function POST(req: Request) {
     );
 
     if (error) {
+      if (isSettingsTableMissing(error)) {
+        return Response.json(
+          {
+            error: 'Submission toggle requires the app_settings table. Run the README SQL setup for app_settings first.',
+          },
+          { status: 500 }
+        );
+      }
+
+      if (isPermissionDenied(error)) {
+        return Response.json(
+          {
+            error: 'Unable to update app_settings due database permissions. Disable RLS on app_settings or add insert/update policies.',
+          },
+          { status: 500 }
+        );
+      }
+
       throw error;
     }
 

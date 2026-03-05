@@ -123,7 +123,12 @@ export default function Home() {
     }
 
     if (!res.ok) {
-      alert('Unable to update submission status.');
+      try {
+        const payload: { error?: string } = await res.json();
+        alert(payload.error ?? 'Unable to update submission status.');
+      } catch {
+        alert('Unable to update submission status.');
+      }
       return;
     }
 
