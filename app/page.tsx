@@ -38,6 +38,7 @@ export default function Home() {
   const [isLoadingSubmissionSetting, setIsLoadingSubmissionSetting] = useState(true);
   const [submissionError, setSubmissionError] = useState<string | null>(null);
   const [adminPassword, setAdminPassword] = useState<string | null>(null);
+  const [isAdminControlsOpen, setIsAdminControlsOpen] = useState(true);
 
   useEffect(() => {
     const savedCode = window.localStorage.getItem(ASSIGNED_CODE_STORAGE_KEY);
@@ -124,7 +125,10 @@ export default function Home() {
 
   const handleAdminUnlock = () => {
     const pass = prompt('Enter Admin Password:');
-    if (pass) setAdminPassword(pass);
+    if (pass) {
+      setAdminPassword(pass);
+      setIsAdminControlsOpen(true);
+    }
   };
 
   const handleToggleSubmissions = async () => {
@@ -345,39 +349,56 @@ export default function Home() {
           )}
         </div>
 
-        <div className="bg-gray-800 p-6 rounded-lg shadow-lg h-fit">
+        <div className="flex flex-col gap-3 h-fit">
+          {adminPassword && (
+            <div className="bg-gray-800 p-4 rounded-lg shadow-lg border border-red-500/30">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs uppercase tracking-wider text-red-300">Admin Controls</p>
+                  <p className="text-xs text-gray-400 mt-1">Manage submission mode and queue settings.</p>
+                </div>
+                <button
+                  onClick={() => setIsAdminControlsOpen((prev) => !prev)}
+                  className="text-xs font-bold px-3 py-1 rounded border border-gray-500 text-gray-200 hover:bg-gray-700 transition"
+                >
+                  {isAdminControlsOpen ? 'Hide Controls' : 'Show Controls'}
+                </button>
+              </div>
+
+              {isAdminControlsOpen && (
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <button
+                    onClick={handleToggleSubmissionMode}
+                    className={`text-xs font-bold px-3 py-1 rounded border transition ${submissionMode === 'review' ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500 hover:bg-indigo-500/30' : 'bg-cyan-500/20 text-cyan-300 border-cyan-500 hover:bg-cyan-500/30'}`}
+                  >
+                    {submissionMode === 'review' ? 'Switch To Question Mode' : 'Switch To Review Mode'}
+                  </button>
+                  <button
+                    onClick={handleToggleSubmissions}
+                    className={`text-xs font-bold px-3 py-1 rounded border transition ${submissionsOpen ? 'bg-amber-500/20 text-amber-300 border-amber-500 hover:bg-amber-500/30' : 'bg-green-500/20 text-green-300 border-green-500 hover:bg-green-500/30'}`}
+                  >
+                    {submissionsOpen ? 'Close Submissions' : 'Open Submissions'}
+                  </button>
+                  <button
+                    onClick={handleClearAll}
+                    disabled={queue.length === 0}
+                    className="bg-red-700 hover:bg-red-600 disabled:bg-red-900/40 disabled:text-red-200/40 disabled:cursor-not-allowed text-white text-xs font-bold px-3 py-1 rounded border border-red-500 transition"
+                    title="Clear all queue entries"
+                  >
+                    Clear All
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="bg-gray-800 p-6 rounded-lg shadow-lg h-fit">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-2xl font-bold">Live Queue ({queue.length})</h2>
             <div className="flex items-center gap-2">
               <span className="text-xs bg-gray-700 text-gray-200 px-2 py-1 rounded border border-gray-600">
                 Total in list: {queue.length}
               </span>
-              {adminPassword && (
-                <button
-                  onClick={handleClearAll}
-                  disabled={queue.length === 0}
-                  className="bg-red-700 hover:bg-red-600 disabled:bg-red-900/40 disabled:text-red-200/40 disabled:cursor-not-allowed text-white text-xs font-bold px-3 py-1 rounded border border-red-500 transition"
-                  title="Clear all queue entries"
-                >
-                  Clear All
-                </button>
-              )}
-              {adminPassword && (
-                <button
-                  onClick={handleToggleSubmissionMode}
-                  className={`text-xs font-bold px-2 py-1 rounded border transition ${submissionMode === 'review' ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500 hover:bg-indigo-500/30' : 'bg-cyan-500/20 text-cyan-300 border-cyan-500 hover:bg-cyan-500/30'}`}
-                >
-                  {submissionMode === 'review' ? 'Switch To Question Mode' : 'Switch To Review Mode'}
-                </button>
-              )}
-              {adminPassword && (
-                <button
-                  onClick={handleToggleSubmissions}
-                  className={`text-xs font-bold px-2 py-1 rounded border transition ${submissionsOpen ? 'bg-amber-500/20 text-amber-300 border-amber-500 hover:bg-amber-500/30' : 'bg-green-500/20 text-green-300 border-green-500 hover:bg-green-500/30'}`}
-                >
-                  {submissionsOpen ? 'Close Submissions' : 'Open Submissions'}
-                </button>
-              )}
               {adminPassword && <span className="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded border border-red-500">Admin Mode Active</span>}
             </div>
           </div>
@@ -433,6 +454,7 @@ export default function Home() {
               </div>
             ))}
           </div>
+        </div>
         </div>
       </div>
 
