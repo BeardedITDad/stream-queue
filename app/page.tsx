@@ -24,6 +24,8 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
+const ASSIGNED_CODE_STORAGE_KEY = 'stream_queue_assigned_code';
+
 export default function Home() {
   const [queue, setQueue] = useState<QueueItem[]>([]);
   const [formData, setFormData] = useState<FormData>({ name: '', url1: '', url2: '', url3: '' });
@@ -34,6 +36,11 @@ export default function Home() {
   const [adminPassword, setAdminPassword] = useState<string | null>(null);
 
   useEffect(() => {
+    const savedCode = window.localStorage.getItem(ASSIGNED_CODE_STORAGE_KEY);
+    if (savedCode) {
+      setAssignedCode(savedCode);
+    }
+
     fetchQueue();
     fetchSubmissionSetting();
 
@@ -43,6 +50,15 @@ export default function Home() {
 
     return () => { supabase.removeChannel(channel); };
   }, []);
+
+  useEffect(() => {
+    if (assignedCode) {
+      window.localStorage.setItem(ASSIGNED_CODE_STORAGE_KEY, assignedCode);
+      return;
+    }
+
+    window.localStorage.removeItem(ASSIGNED_CODE_STORAGE_KEY);
+  }, [assignedCode]);
 
   const fetchQueue = async () => {
     const { data } = await supabase
@@ -240,17 +256,29 @@ export default function Home() {
 
           {isLoadingSubmissionSetting ? (
             <p className="text-gray-400 italic">Loading submission availability...</p>
+          ) : assignedCode ? (
+            <div className="bg-green-600/20 border border-green-500 p-4 rounded text-center">
+              <h3 className="text-xl font-bold text-green-400">You are in the queue!</h3>
+              <p className="mt-2 text-gray-300">
+                To jump ahead, donate at{' '}
+                <a
+                  href="https://ko-fi.com/thebeardeditdad"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-bold underline decoration-green-300 underline-offset-2 hover:text-white"
+                >
+                  ko-fi.com/thebeardeditdad
+                </a>{' '}
+                and include this exact code in your message:
+              </p>
+              <p className="text-4xl font-black text-white my-4 tracking-widest">{assignedCode}</p>
+              <p className="text-xs text-green-200/90">This code is saved on this browser, so you can come back and still donate later.</p>
+              <button onClick={() => setAssignedCode(null)} className="text-sm underline text-gray-300 hover:text-white mt-3">Submit another</button>
+            </div>
           ) : !submissionsOpen ? (
             <div className="rounded border border-amber-500/70 bg-amber-500/10 p-4 text-amber-200">
               <h3 className="text-lg font-bold text-amber-300">Submissions are currently closed</h3>
               <p className="mt-2 text-sm">Additional reviews are currently not being accepted.</p>
-            </div>
-          ) : assignedCode ? (
-            <div className="bg-green-600/20 border border-green-500 p-4 rounded text-center">
-              <h3 className="text-xl font-bold text-green-400">You are in the queue!</h3>
-              <p className="mt-2 text-gray-300">To jump ahead, donate at <strong>https://ko-fi.com/thebeardeditdad</strong> and include this exact code in your message:</p>
-              <p className="text-4xl font-black text-white my-4 tracking-widest">{assignedCode}</p>
-              <button onClick={() => setAssignedCode(null)} className="text-sm underline text-gray-400 hover:text-white mt-2">Submit another</button>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
