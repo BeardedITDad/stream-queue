@@ -132,24 +132,6 @@ export default function Home() {
     // On success, real-time updates will refresh the queue automatically.
   };
 
-  const handleSetPriority = async (id: string) => {
-    if (!adminPassword) return;
-
-    const res = await fetch('/api/priority', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, password: adminPassword })
-    });
-
-    if (res.status === 401) {
-      alert("Wrong password!");
-      setAdminPassword(null); // Kick them out of admin mode
-    } else if (!res.ok) {
-      alert("Something went wrong setting priority.");
-    }
-    // If successful, the realtime subscription will re-order the queue automatically.
-  };
-
     return (
     <div className="min-h-screen bg-[#292e3d] text-white p-10 font-sans flex flex-col justify-between">
      {/* --- LOGO & LINK SECTION START --- */}
