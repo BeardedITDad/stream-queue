@@ -19,18 +19,22 @@ interface FormData {
   url3: string;
 }
 
+type SubmissionMode = 'review' | 'question';
+
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
 const ASSIGNED_CODE_STORAGE_KEY = 'stream_queue_assigned_code';
+const QUESTION_MODE_SENTINEL_URL = '__question_submission__';
 
 export default function Home() {
   const [queue, setQueue] = useState<QueueItem[]>([]);
   const [formData, setFormData] = useState<FormData>({ name: '', url1: '', url2: '', url3: '' });
   const [assignedCode, setAssignedCode] = useState<string | null>(null);
   const [submissionsOpen, setSubmissionsOpen] = useState(true);
+  const [submissionMode, setSubmissionMode] = useState<SubmissionMode>('review');
   const [isLoadingSubmissionSetting, setIsLoadingSubmissionSetting] = useState(true);
   const [submissionError, setSubmissionError] = useState<string | null>(null);
   const [adminPassword, setAdminPassword] = useState<string | null>(null);
@@ -78,10 +82,12 @@ export default function Home() {
         throw new Error('Failed to load submission setting.');
       }
 
-      const data: { submissionsOpen: boolean } = await res.json();
+      const data: { submissionsOpen: boolean; submissionMode?: SubmissionMode } = await res.json();
       setSubmissionsOpen(data.submissionsOpen);
+      setSubmissionMode(data.submissionMode === 'question' ? 'question' : 'review');
     } catch {
       setSubmissionsOpen(true);
+      setSubmissionMode('review');
     } finally {
       setIsLoadingSubmissionSetting(false);
     }
@@ -92,7 +98,7 @@ export default function Home() {
     setSubmissionError(null);
 
     if (!submissionsOpen) {
-      setSubmissionError('Additional reviews are currently not being accepted.');
+      setSubmissionError('Additional submissions are currently not being accepted.');
       return;
     }
 
@@ -105,7 +111,7 @@ export default function Home() {
     const payload: { shortId?: string; error?: string } = await res.json();
 
     if (!res.ok || !payload.shortId) {
-      setSubmissionError(payload.error ?? 'Unable to submit your review request right now.');
+      setSubmissionError(payload.error ?? 'Unable to submit your request right now.');
       if (res.status === 403) {
         setSubmissionsOpen(false);
       }
@@ -153,6 +159,35 @@ export default function Home() {
     } else {
       setSubmissionError(null);
     }
+  };
+
+  const handleToggleSubmissionMode = async () => {
+    if (!adminPassword) return;
+
+    const nextMode: SubmissionMode = submissionMode === 'review' ? 'question' : 'review';
+    const res = await fetch('/api/submissions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: adminPassword, submissionMode: nextMode }),
+    });
+
+    if (res.status === 401) {
+      alert('Wrong password!');
+      setAdminPassword(null);
+      return;
+    }
+
+    if (!res.ok) {
+      try {
+        const payload: { error?: string } = await res.json();
+        alert(payload.error ?? 'Unable to update submission mode.');
+      } catch {
+        alert('Unable to update submission mode.');
+      }
+      return;
+    }
+
+    setSubmissionMode(nextMode);
   };
 
   const handleRemove = async (id: string) => {
@@ -246,7 +281,10 @@ export default function Home() {
 
       <div className="max-w-4xl mx-auto w-full grid grid-cols-1 md:grid-cols-2 gap-10">
         <div className="bg-gray-800 p-6 rounded-lg shadow-lg h-fit">
-          <h2 className="text-2xl font-bold mb-4">Submit for Review</h2>
+          <h2 className="text-2xl font-bold mb-4">Submit</h2>
+          <p className="mb-4 text-xs uppercase tracking-wide text-gray-400">
+            Current mode: <span className="font-bold text-white">{submissionMode === 'review' ? 'Review Mode' : 'Question Mode'}</span>
+          </p>
 
           {submissionError && (
             <div className="mb-4 rounded border border-red-500/70 bg-red-500/10 p-3 text-sm text-red-300">
@@ -278,19 +316,25 @@ export default function Home() {
           ) : !submissionsOpen ? (
             <div className="rounded border border-amber-500/70 bg-amber-500/10 p-4 text-amber-200">
               <h3 className="text-lg font-bold text-amber-300">Submissions are currently closed</h3>
-              <p className="mt-2 text-sm">Additional reviews are currently not being accepted.</p>
+              <p className="mt-2 text-sm">Additional submissions are currently not being accepted.</p>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
               <input required placeholder="Your Name / Handle" className="p-2 bg-gray-700 rounded text-white" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
-              <input required placeholder="URL 1 (LinkedIn, GitHub, etc)" className="p-2 bg-gray-700 rounded text-white" value={formData.url1} onChange={e => setFormData({ ...formData, url1: e.target.value })} />
-              <input placeholder="URL 2 (Optional)" className="p-2 bg-gray-700 rounded text-white" value={formData.url2} onChange={e => setFormData({ ...formData, url2: e.target.value })} />
-              <textarea
-                placeholder="Any specific questions or context?"
-                className="p-2 bg-gray-700 rounded text-white h-24 resize-none"
-                value={formData.url3}
-                onChange={e => setFormData({ ...formData, url3: e.target.value })}
-              />
+              {submissionMode === 'review' ? (
+                <>
+                  <input required placeholder="URL 1 (LinkedIn, GitHub, etc)" className="p-2 bg-gray-700 rounded text-white" value={formData.url1} onChange={e => setFormData({ ...formData, url1: e.target.value })} />
+                  <input placeholder="URL 2 (Optional)" className="p-2 bg-gray-700 rounded text-white" value={formData.url2} onChange={e => setFormData({ ...formData, url2: e.target.value })} />
+                </>
+              ) : (
+                <textarea
+                  required
+                  placeholder="Your question"
+                  className="p-2 bg-gray-700 rounded text-white h-24 resize-none"
+                  value={formData.url3}
+                  onChange={e => setFormData({ ...formData, url3: e.target.value })}
+                />
+              )}
               <button type="submit" className="bg-blue-600 hover:bg-blue-500 font-bold p-3 rounded transition mt-2">Join Queue</button>
               <p className="text-xs text-gray-500 text-center mt-3 leading-tight">
                 By clicking "Join Queue", you agree that your information will be
@@ -320,6 +364,14 @@ export default function Home() {
               )}
               {adminPassword && (
                 <button
+                  onClick={handleToggleSubmissionMode}
+                  className={`text-xs font-bold px-2 py-1 rounded border transition ${submissionMode === 'review' ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500 hover:bg-indigo-500/30' : 'bg-cyan-500/20 text-cyan-300 border-cyan-500 hover:bg-cyan-500/30'}`}
+                >
+                  {submissionMode === 'review' ? 'Switch To Question Mode' : 'Switch To Review Mode'}
+                </button>
+              )}
+              {adminPassword && (
+                <button
                   onClick={handleToggleSubmissions}
                   className={`text-xs font-bold px-2 py-1 rounded border transition ${submissionsOpen ? 'bg-amber-500/20 text-amber-300 border-amber-500 hover:bg-amber-500/30' : 'bg-green-500/20 text-green-300 border-green-500 hover:bg-green-500/30'}`}
                 >
@@ -339,15 +391,21 @@ export default function Home() {
                     <span className="font-bold text-lg">#{index + 1} - {user.name}</span>
                     {user.is_priority && <span className="text-xs bg-yellow-500 text-black px-2 py-1 font-black rounded uppercase tracking-wider">Priority</span>}
                   </div>
-                  <div className="text-sm text-blue-400 mt-2 flex flex-col gap-1 overflow-hidden">
-                    <a href={user.url1} target="_blank" rel="noreferrer" className="truncate hover:underline">{user.url1}</a>
-                    {user.url2 && <a href={user.url2} target="_blank" rel="noreferrer" className="truncate hover:underline">{user.url2}</a>}
-                    {user.url3 && (
-                      <p className="text-gray-300 text-xs italic mt-1 border-l-2 border-gray-500 pl-2 break-words">
-                        "{user.url3}"
-                      </p>
-                    )}
-                  </div>
+                  {user.url1 === QUESTION_MODE_SENTINEL_URL ? (
+                    <p className="text-gray-200 text-sm mt-2 border-l-2 border-cyan-400 pl-2 break-words">
+                      Q: {user.url3}
+                    </p>
+                  ) : (
+                    <div className="text-sm text-blue-400 mt-2 flex flex-col gap-1 overflow-hidden">
+                      <a href={user.url1} target="_blank" rel="noreferrer" className="truncate hover:underline">{user.url1}</a>
+                      {user.url2 && <a href={user.url2} target="_blank" rel="noreferrer" className="truncate hover:underline">{user.url2}</a>}
+                      {user.url3 && (
+                        <p className="text-gray-300 text-xs italic mt-1 border-l-2 border-gray-500 pl-2 break-words">
+                          "{user.url3}"
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {adminPassword && (
