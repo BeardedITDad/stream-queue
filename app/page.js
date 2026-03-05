@@ -48,7 +48,38 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-10 font-sans">
+    <div className="min-h-screen bg-[#292e3d] text-white p-10 font-sans">
+    {/* --- LOGO & LINK SECTION START --- */}
+<div className="flex flex-col items-center w-full mb-6 z-20 relative">
+  
+  {/* Clickable Logo */}
+  <a 
+    href="https://itcareeraccelerator.com/" 
+    target="_blank" 
+    rel="noopener noreferrer"
+    className="hover:scale-105 transition-transform duration-200"
+  >
+    <img 
+      src="/IT CAREER (1024 x 500 px).png" 
+      alt="IT Career Accelerator" 
+      className="h-40 w-auto object-contain" 
+    />
+  </a>
+
+  {/* Subtitle Text Link */}
+  <div className="text-center mt-0 -mb-2">
+    <p className="text-gray-400 text-sm mb-1">Waiting for a review?</p>
+    <a 
+      href="https://itcareeraccelerator.com/" 
+      target="_blank"
+      className="text-[#ff6600] font-bold underline decoration-[#ff6600] underline-offset-4 hover:text-orange-400 transition"
+    >
+      Check out the full IT Career Accelerator Community &rarr;
+    </a>
+  </div>
+
+</div>
+{/* --- LOGO & LINK SECTION END --- */}
       <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-10">
         
         {/* Submission Form */}
@@ -57,7 +88,7 @@ export default function Home() {
           {assignedCode ? (
             <div className="bg-green-600/20 border border-green-500 p-4 rounded text-center">
               <h3 className="text-xl font-bold text-green-400">You're in the queue!</h3>
-              <p className="mt-2">To jump ahead, donate at <strong>ko-fi.com/tylerramsbey</strong> and include this exact code in your message:</p>
+              <p className="mt-2">To jump ahead, donate at <strong>https://ko-fi.com/thebeardeditdad</strong> and include this exact code in your message:</p>
               <p className="text-4xl font-black text-white my-3">{assignedCode}</p>
               <button onClick={() => setAssignedCode(null)} className="text-sm underline text-gray-400 hover:text-white mt-2">Submit another</button>
             </div>
@@ -66,8 +97,21 @@ export default function Home() {
               <input required placeholder="Your Name / Handle" className="p-2 bg-gray-700 rounded" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
               <input required placeholder="URL 1 (LinkedIn, GitHub, etc)" className="p-2 bg-gray-700 rounded" value={formData.url1} onChange={e => setFormData({...formData, url1: e.target.value})} />
               <input placeholder="URL 2 (Optional)" className="p-2 bg-gray-700 rounded" value={formData.url2} onChange={e => setFormData({...formData, url2: e.target.value})} />
-              <input placeholder="URL 3 (Optional)" className="p-2 bg-gray-700 rounded" value={formData.url3} onChange={e => setFormData({...formData, url3: e.target.value})} />
-              <button type="submit" className="bg-blue-600 hover:bg-blue-500 font-bold p-3 rounded transition">Join Queue</button>
+              <input placeholder="URL 2 (Optional)" className="p-2 bg-gray-700 rounded text-white" value={formData.url2} onChange={e => setFormData({...formData, url2: e.target.value})} />
+              {/* Changed URL 3 to a Question box */}
+              <textarea 
+                placeholder="Any specific questions or context?" 
+                className="p-2 bg-gray-700 rounded text-white h-24 resize-none" 
+                value={formData.url3} 
+                onChange={e => setFormData({...formData, url3: e.target.value})} 
+              />
+              <button type="submit" className="bg-blue-600 hover:bg-blue-500 font-bold p-3 rounded transition mt-2">Join Queue</button>
+              {/* Disclaimer Text */}
+              <p className="text-xs text-gray-500 text-center mt-3 leading-tight">
+                By clicking "Join Queue", you agree that your information will be 
+                <span className="text-gray-400 font-semibold"> displayed publicly</span> and 
+                reviewed on <span className="text-gray-400 font-semibold">live stream</span>.
+              </p>
             </form>
           )}
         </div>
@@ -83,10 +127,21 @@ export default function Home() {
                   <span className="font-bold text-lg">#{index + 1} - {user.name}</span>
                   {user.is_priority && <span className="text-xs bg-yellow-500 text-black px-2 py-1 font-black rounded uppercase tracking-wider">Priority</span>}
                 </div>
-                <div className="text-sm text-blue-400 mt-2 flex flex-col">
-                  <a href={user.url1} target="_blank">{user.url1}</a>
-                  {user.url2 && <a href={user.url2} target="_blank">{user.url2}</a>}
-                  {user.url3 && <a href={user.url3} target="_blank">{user.url3}</a>}
+                <div className="text-sm text-blue-400 mt-2 flex flex-col gap-1 overflow-hidden">
+  
+                  {/* URL 1 */}
+                  <a href={user.url1} target="_blank" rel="noreferrer" className="truncate hover:underline">{user.url1}</a>
+  
+                  {/* URL 2 */}
+                  {user.url2 && <a href={user.url2} target="_blank" rel="noreferrer" className="truncate hover:underline">{user.url2}</a>}
+  
+                  {/* URL 3 (Question/Context - NO LINK TAG HERE) */}
+                  {user.url3 && (
+                    <p className="text-gray-300 text-xs italic mt-1 border-l-2 border-gray-500 pl-2 break-words">
+                      "{user.url3}"
+                    </p>
+                   )}
+
                 </div>
               </div>
             ))}
