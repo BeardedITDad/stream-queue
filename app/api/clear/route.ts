@@ -7,26 +7,22 @@ const supabase = createClient(
 
 export async function POST(req: Request) {
   try {
-    const { id, password } = await req.json();
+    const { password } = await req.json();
 
     if (password !== process.env.ADMIN_PASSWORD) {
       return new Response('Unauthorized: Wrong Password', { status: 401 });
     }
 
-    if (!id) {
-      return new Response('Missing queue item id', { status: 400 });
-    }
     const { error } = await supabase
       .from('queue')
-      .update({ is_priority: true })
-      .eq('id', id)
+      .delete()
       .eq('status', 'waiting');
 
     if (error) throw error;
 
-    return new Response('Successfully set priority', { status: 200 });
+    return new Response('Successfully cleared queue', { status: 200 });
   } catch (error) {
-    console.error('Priority Error:', error);
+    console.error('Clear Queue Error:', error);
     return new Response('Error processing request', { status: 500 });
   }
 }
