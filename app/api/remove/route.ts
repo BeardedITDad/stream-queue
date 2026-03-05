@@ -7,22 +7,34 @@ const supabase = createClient(
 
 export async function POST(req: Request) {
   try {
-    const { id, password } = await req.json();
+    const { id, password, clearAll } = await req.json();
 
     // Check if the password matches your Vercel environment variable
     if (password !== process.env.ADMIN_PASSWORD) {
       return new Response('Unauthorized: Wrong Password', { status: 401 });
     }
 
-    // If password is correct, delete the user from the queue
-    const { error } = await supabase
-      .from('queue')
-      .delete()
-      .eq('id', id);
+    if (clearAll) {
+      // Delete all waiting users in the queue.
+      const { error } = await supabase
+        .from('queue')
+        .delete()
+        .eq('status', 'waiting');
 
-    if (error) throw error;
+      if (error) throw error;
 
-    return new Response('Successfully removed', { status: 200 });
+      return new Response('Successfully cleared queue', { status: 200 });
+    } else {
+      // Delete a single user from the queue.
+      const { error } = await supabase
+        .from('queue')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      return new Response('Successfully removed', { status: 200 });
+    }
   } catch (error) {
     console.error('Delete Error:', error);
     return new Response('Error processing request', { status: 500 });
