@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
+import Image from 'next/image'; // <-- NEW: Imported Next.js Image component
 
 interface QueueItem {
   id: string;
@@ -91,6 +92,44 @@ export default function Home() {
       alert("Something went wrong removing the user.");
     }
     // If successful, the Supabase real-time subscription will automatically remove them from the screen!
+  };
+  const handleSetPriority = async (id: string) => {
+    if (!adminPassword) return;
+
+    const res = await fetch('/api/priority', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, password: adminPassword })
+    });
+
+    if (res.status === 401) {
+      alert("Wrong password!");
+      setAdminPassword(null); // Kick them out of admin mode
+    } else if (!res.ok) {
+      alert("Something went wrong setting priority.");
+    }
+    // If successful, the realtime subscription will re-order the queue automatically.
+  };
+
+  const handleClearAll = async () => {
+    if (!adminPassword) return;
+
+    const confirmed = window.confirm('Are you sure you want to clear all entries from the queue?');
+    if (!confirmed) return;
+
+    const res = await fetch('/api/remove-all', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: adminPassword })
+    });
+
+    if (res.status === 401) {
+      alert('Wrong password!');
+      setAdminPassword(null);
+    } else if (!res.ok) {
+      alert('Something went wrong clearing the queue.');
+    }
+    // On success, real-time updates will refresh the queue automatically.
   };
 
   const handleSetPriority = async (id: string) => {
@@ -187,6 +226,16 @@ export default function Home() {
                <span className="text-xs bg-gray-700 text-gray-200 px-2 py-1 rounded border border-gray-600">
                  Total in list: {queue.length}
                </span>
+               {adminPassword && (
+                 <button
+                   onClick={handleClearAll}
+                   disabled={queue.length === 0}
+                   className="bg-red-700 hover:bg-red-600 disabled:bg-red-900/40 disabled:text-red-200/40 disabled:cursor-not-allowed text-white text-xs font-bold px-3 py-1 rounded border border-red-500 transition"
+                   title="Clear all queue entries"
+                 >
+                   Clear All
+                 </button>
+               )}
                {adminPassword && <span className="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded border border-red-500">Admin Mode Active</span>}
              </div>
           </div>
@@ -249,7 +298,7 @@ export default function Home() {
         </div>
       </div>
 
-{/* Footer & Secret Admin Toggle */}
+      {/* Footer & Secret Admin Toggle */}
       <div className="max-w-4xl mx-auto w-full mt-10 text-center flex flex-col items-center gap-2">
         <p className="text-gray-400 text-sm">
           Created by <a href="https://youtube.com/@TylerRamsbey" target="_blank" rel="noreferrer" className="text-blue-400 hover:text-blue-300 hover:underline font-semibold transition">Tyler Ramsbey</a>. Open-source and free to use.
