@@ -16,6 +16,73 @@ interface ToggleRow {
   is_priority: boolean | null;
 }
 
+interface ExistingQueueEntry {
+  name: string | null;
+  url1: string | null;
+  url2: string | null;
+}
+
+function normalizeName(value: string) {
+  return value.trim().toLowerCase();
+}
+
+function normalizeUrl(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return '';
+  }
+
+  try {
+    const parsed = new URL(trimmed);
+    const normalizedPath = parsed.pathname.replace(/\/+$/, '') || '/';
+    return `${parsed.protocol.toLowerCase()}//${parsed.hostname.toLowerCase()}${normalizedPath}${parsed.search}`;
+  } catch {
+    // Keep a fallback for non-standard URL inputs so duplicate checks still work.
+    return trimmed.toLowerCase().replace(/\/+$/, '');
+  }
+}
+
+async function findDuplicateReason(
+  name: string,
+  url1: string,
+  url2: string,
+  submissionMode: SubmissionMode
+): Promise<string | null> {
+  const { data, error } = await supabase
+    .from('queue')
+    .select('name, url1, url2')
+    .eq('status', 'waiting');
+
+  if (error) {
+    throw error;
+  }
+
+  const queueEntries = (data as ExistingQueueEntry[] | null) ?? [];
+  const normalizedName = normalizeName(name);
+  const normalizedIncomingUrls = submissionMode === 'review'
+    ? [normalizeUrl(url1), normalizeUrl(url2)].filter(Boolean)
+    : [];
+
+  for (const entry of queueEntries) {
+    if (normalizeName(entry.name ?? '') === normalizedName) {
+      return 'A submission with this name is already in the queue.';
+    }
+
+    if (submissionMode !== 'review') {
+      continue;
+    }
+
+    const normalizedExistingUrls = [normalizeUrl(entry.url1 ?? ''), normalizeUrl(entry.url2 ?? '')].filter(Boolean);
+    const hasDuplicateUrl = normalizedIncomingUrls.some((incomingUrl) => normalizedExistingUrls.includes(incomingUrl));
+
+    if (hasDuplicateUrl) {
+      return 'A submission with one of these URLs is already in the queue.';
+    }
+  }
+
+  return null;
+}
+
 async function getSubmissionsOpen() {
   const { data, error } = await supabase
     .from('queue')
@@ -78,6 +145,11 @@ export async function POST(req: Request) {
 
     if (submissionMode === 'question' && (!name || !url3)) {
       return Response.json({ error: 'Name and question are required in question mode.' }, { status: 400 });
+    }
+
+    const duplicateReason = await findDuplicateReason(name, url1, url2, submissionMode);
+    if (duplicateReason) {
+      return Response.json({ error: duplicateReason }, { status: 409 });
     }
 
     const shortId = Math.floor(1000 + Math.random() * 9000).toString();
