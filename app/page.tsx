@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { createClient } from '@supabase/supabase-js';
 
 interface QueueItem {
@@ -32,6 +32,7 @@ const QUESTION_MODE_SENTINEL_URL = '__question_submission__';
 export default function Home() {
   const [queue, setQueue] = useState<QueueItem[]>([]);
   const [formData, setFormData] = useState<FormData>({ name: '', url1: '', url2: '', url3: '' });
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [assignedCode, setAssignedCode] = useState<string | null>(null);
   const [submissionsOpen, setSubmissionsOpen] = useState(true);
   const [submissionMode, setSubmissionMode] = useState<SubmissionMode>('review');
@@ -39,6 +40,7 @@ export default function Home() {
   const [submissionError, setSubmissionError] = useState<string | null>(null);
   const [adminPassword, setAdminPassword] = useState<string | null>(null);
   const [isAdminControlsOpen, setIsAdminControlsOpen] = useState(true);
+  const submitLockRef = useRef(false);
 
   useEffect(() => {
     const savedCode = window.localStorage.getItem(ASSIGNED_CODE_STORAGE_KEY);
@@ -99,31 +101,45 @@ export default function Home() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    if (submitLockRef.current) {
+      return;
+    }
+
+    submitLockRef.current = true;
+    setIsSubmitting(true);
     setSubmissionError(null);
 
-    if (!submissionsOpen) {
-      setSubmissionError('Additional submissions are currently not being accepted.');
-      return;
-    }
-
-    const res = await fetch('/api/submit', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(formData),
-    });
-
-    const payload: { shortId?: string; error?: string } = await res.json();
-
-    if (!res.ok || !payload.shortId) {
-      setSubmissionError(payload.error ?? 'Unable to submit your request right now.');
-      if (res.status === 403) {
-        setSubmissionsOpen(false);
+    try {
+      if (!submissionsOpen) {
+        setSubmissionError('Additional submissions are currently not being accepted.');
+        return;
       }
-      return;
-    }
 
-    setAssignedCode(payload.shortId);
-    setFormData({ name: '', url1: '', url2: '', url3: '' });
+      const res = await fetch('/api/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+
+      const payload: { shortId?: string; error?: string } = await res.json();
+
+      if (!res.ok || !payload.shortId) {
+        setSubmissionError(payload.error ?? 'Unable to submit your request right now.');
+        if (res.status === 403) {
+          setSubmissionsOpen(false);
+        }
+        return;
+      }
+
+      setAssignedCode(payload.shortId);
+      setFormData({ name: '', url1: '', url2: '', url3: '' });
+    } catch {
+      setSubmissionError('Unable to submit your request right now.');
+    } finally {
+      submitLockRef.current = false;
+      setIsSubmitting(false);
+    }
   };
 
   const handleAdminUnlock = () => {
@@ -326,7 +342,7 @@ export default function Home() {
               <p className="mt-2 text-sm">Additional submissions are currently not being accepted.</p>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            <form onSubmit={handleSubmit} className="flex flex-col gap-4" aria-busy={isSubmitting}>
               <input required placeholder="Your Name / Handle" className="p-2 bg-gray-700 rounded text-white" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
               {submissionMode === 'review' ? (
                 <>
@@ -348,7 +364,22 @@ export default function Home() {
                   onChange={e => setFormData({ ...formData, url3: e.target.value })}
                 />
               )}
-              <button type="submit" className="bg-blue-600 hover:bg-blue-500 font-bold p-3 rounded transition mt-2">Join Queue</button>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="mt-2 flex items-center justify-center gap-2 rounded bg-blue-600 p-3 font-bold transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:bg-blue-900/60 disabled:text-blue-100/70"
+              >
+                {isSubmitting && (
+                  <span
+                    className="h-4 w-4 animate-spin rounded-full border-2 border-blue-100/30 border-t-blue-100"
+                    aria-hidden="true"
+                  />
+                )}
+                <span>{isSubmitting ? 'Submitting...' : 'Join Queue'}</span>
+              </button>
+              {isSubmitting && (
+                <p className="-mt-1 text-center text-xs text-blue-200/80">Sending your submission, please wait...</p>
+              )}
               <p className="text-xs text-gray-500 text-center mt-3 leading-tight">
                 By clicking "Join Queue", you agree that your information will be
                 <span className="text-gray-400 font-semibold"> displayed publicly</span> and
