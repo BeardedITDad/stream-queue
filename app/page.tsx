@@ -50,7 +50,10 @@ export default function Home() {
     fetchSubmissionSetting();
 
     const channel = supabase.channel('public:queue')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'queue' }, fetchQueue)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'queue' }, () => {
+        fetchQueue();
+        fetchSubmissionSetting();
+      })
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
