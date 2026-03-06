@@ -415,10 +415,10 @@ export default function Home() {
           <div className="flex flex-col gap-3">
             {queue.length === 0 && <p className="text-gray-400 italic">Queue is empty. Be the first!</p>}
             {queue.map((user, index) => (
-              <div key={user.id} className={`p-4 rounded border flex justify-between ${user.is_priority ? 'bg-yellow-500/10 border-yellow-500' : 'bg-gray-700 border-gray-600'}`}>
-                <div className="w-full">
-                  <div className="flex justify-between items-center">
-                    <span className="font-bold text-lg">#{index + 1} - {user.name}</span>
+              <div key={user.id} className={`p-4 rounded border flex items-start justify-between gap-4 ${user.is_priority ? 'bg-yellow-500/10 border-yellow-500' : 'bg-gray-700 border-gray-600'}`}>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="min-w-0 break-words font-bold text-lg">#{index + 1} - {user.name}</span>
                     {user.is_priority && <span className="text-xs bg-yellow-500 text-black px-2 py-1 font-black rounded uppercase tracking-wider">Priority</span>}
                   </div>
                   {user.url1 === QUESTION_MODE_SENTINEL_URL ? (
@@ -426,9 +426,9 @@ export default function Home() {
                       Q: {user.url3}
                     </p>
                   ) : (
-                    <div className="text-sm text-blue-400 mt-2 flex flex-col gap-1 overflow-hidden">
-                      <a href={user.url1} target="_blank" rel="noreferrer" className="truncate hover:underline">{user.url1}</a>
-                      {user.url2 && <a href={user.url2} target="_blank" rel="noreferrer" className="truncate hover:underline">{user.url2}</a>}
+                    <div className="text-sm text-blue-400 mt-2 flex min-w-0 flex-col gap-1 overflow-hidden">
+                      <a href={user.url1} target="_blank" rel="noreferrer" className="break-all hover:underline">{user.url1}</a>
+                      {user.url2 && <a href={user.url2} target="_blank" rel="noreferrer" className="break-all hover:underline">{user.url2}</a>}
                       {user.url3 && (
                         <p className="text-gray-300 text-xs italic mt-1 border-l-2 border-gray-500 pl-2 break-words">
                           "{user.url3}"
@@ -439,7 +439,7 @@ export default function Home() {
                 </div>
 
                 {adminPassword && (
-                  <div className="ml-4 flex items-center border-l border-gray-600 pl-4">
+                  <div className="ml-4 flex shrink-0 items-center border-l border-gray-600 pl-4">
                     <div className="flex flex-col gap-2">
                       {!user.is_priority && (
                         <button
