@@ -329,6 +329,12 @@ export default function Home() {
                 <>
                   <input required placeholder="URL 1 (LinkedIn, GitHub, etc)" className="p-2 bg-gray-700 rounded text-white" value={formData.url1} onChange={e => setFormData({ ...formData, url1: e.target.value })} />
                   <input placeholder="URL 2 (Optional)" className="p-2 bg-gray-700 rounded text-white" value={formData.url2} onChange={e => setFormData({ ...formData, url2: e.target.value })} />
+                  <textarea
+                    placeholder="Any specific questions or context? (Optional)"
+                    className="p-2 bg-gray-700 rounded text-white h-24 resize-none"
+                    value={formData.url3}
+                    onChange={e => setFormData({ ...formData, url3: e.target.value })}
+                  />
                 </>
               ) : (
                 <textarea
