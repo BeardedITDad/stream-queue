@@ -20,10 +20,31 @@ interface FormData {
   url3: string;
 }
 
+interface ExistingQueueEntry {
+  name: string | null;
+  url1: string | null;
+  url2: string | null;
+}
+
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
+
+const normalizeName = (value: string) => value.trim().toLowerCase();
+
+const normalizeUrl = (value: string) => {
+  const trimmed = value.trim();
+  if (!trimmed) return '';
+
+  try {
+    const parsed = new URL(trimmed);
+    const normalizedPath = parsed.pathname.replace(/\/+$/, '') || '/';
+    return `${parsed.protocol.toLowerCase()}//${parsed.hostname.toLowerCase()}${normalizedPath}${parsed.search}`;
+  } catch {
+    return trimmed.toLowerCase().replace(/\/+$/, '');
+  }
+};
 
 export default function Home() {
   const [queue, setQueue] = useState<QueueItem[]>([]);
@@ -53,13 +74,44 @@ export default function Home() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    const name = formData.name.trim();
+    const url1 = formData.url1.trim();
+    const url2 = formData.url2.trim();
+    const url3 = formData.url3.trim();
+
+    const { data: waitingUsers, error: waitingUsersError } = await supabase
+      .from('queue')
+      .select('name, url1, url2')
+      .eq('status', 'waiting');
+
+    if (waitingUsersError) {
+      alert('Unable to submit right now. Please try again.');
+      return;
+    }
+
+    const normalizedName = normalizeName(name);
+    const incomingUrls = [normalizeUrl(url1), normalizeUrl(url2)].filter(Boolean);
+    const hasDuplicate = ((waitingUsers ?? []) as ExistingQueueEntry[]).some((entry) => {
+      if (normalizeName(entry.name ?? '') === normalizedName) {
+        return true;
+      }
+
+      const existingUrls = [normalizeUrl(entry.url1 ?? ''), normalizeUrl(entry.url2 ?? '')].filter(Boolean);
+      return incomingUrls.some((incomingUrl) => existingUrls.includes(incomingUrl));
+    });
+
+    if (hasDuplicate) {
+      alert('A submission with this name or URL is already in the queue.');
+      return;
+    }
+
     const shortId = Math.floor(1000 + Math.random() * 9000).toString();
     
     const { error } = await supabase.from('queue').insert([{ 
-      name: formData.name, 
-      url1: formData.url1, 
-      url2: formData.url2, 
-      url3: formData.url3, 
+      name,
+      url1,
+      url2,
+      url3,
       short_id: shortId 
     }]);
 
