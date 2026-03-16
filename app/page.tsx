@@ -24,6 +24,7 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
+const ASSIGNED_CODE_STORAGE_KEY = 'stream_queue_assigned_code';
 
 export default function Home() {
   const [queue, setQueue] = useState<QueueItem[]>([]);
@@ -34,12 +35,26 @@ export default function Home() {
   const [adminPassword, setAdminPassword] = useState<string | null>(null);
 
   useEffect(() => {
+    const savedCode = window.localStorage.getItem(ASSIGNED_CODE_STORAGE_KEY);
+    if (savedCode) {
+      setAssignedCode(savedCode);
+    }
+
     fetchQueue();
     const channel = supabase.channel('public:queue')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'queue' }, fetchQueue)
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, []);
+
+  useEffect(() => {
+    if (assignedCode) {
+      window.localStorage.setItem(ASSIGNED_CODE_STORAGE_KEY, assignedCode);
+      return;
+    }
+
+    window.localStorage.removeItem(ASSIGNED_CODE_STORAGE_KEY);
+  }, [assignedCode]);
 
   const fetchQueue = async () => {
     const { data } = await supabase
@@ -131,6 +146,10 @@ export default function Home() {
     }
   };
 
+  const handleShowDonationInfo = (shortId: string) => {
+    setAssignedCode(shortId);
+  };
+
   return (
     <div className="min-h-screen bg-gray-900 text-white p-10 font-sans flex flex-col justify-between">
       
@@ -218,7 +237,18 @@ export default function Home() {
                   <div className="flex-1 min-w-0 pr-3">
                     <div className="flex justify-between items-center">
                       <span className="font-bold text-lg">#{index + 1} - {user.name}</span>
-                      {user.is_priority && <span className="text-xs bg-yellow-500 text-black px-2 py-1 font-black rounded uppercase tracking-wider">Priority</span>}
+                      <div className="flex items-center gap-2">
+                        {!user.is_priority && assignedCode === user.short_id && (
+                          <button
+                            onClick={() => handleShowDonationInfo(user.short_id)}
+                            className="text-xs font-bold px-2 py-1 rounded border border-green-500 text-green-300 hover:bg-green-500/20 transition"
+                            title="Show donation info again"
+                          >
+                            Prioritize
+                          </button>
+                        )}
+                        {user.is_priority && <span className="text-xs bg-yellow-500 text-black px-2 py-1 font-black rounded uppercase tracking-wider">Priority</span>}
+                      </div>
                     </div>
                     <div className="text-sm text-blue-400 mt-2 flex flex-col gap-1 overflow-hidden">
                       <a href={user.url1} target="_blank" rel="noreferrer" className="truncate hover:underline">{user.url1}</a>
