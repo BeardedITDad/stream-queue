@@ -246,7 +246,7 @@ export default function Home() {
                 </button>
                 <button
                   onClick={handleClearAll}
-                  className="bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-4 rounded transition"
+                  className={`text-xs font-bold px-3 py-1 rounded border transition ${submissionsOpen ? 'bg-amber-500/20 text-amber-300 border-amber-500 hover:bg-amber-500/30' : 'bg-green-500/20 text-green-300 border-green-500 hover:bg-green-500/30'}`}
                   title="Remove all waiting users from the queue"
                 >
                   Clear All
