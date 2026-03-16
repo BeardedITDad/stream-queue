@@ -46,11 +46,33 @@ const normalizeUrl = (value: string) => {
   }
 };
 
+async function isDuplicateSubmission(name: string, url1: string, url2: string) {
+  const { data: waitingUsers, error: waitingUsersError } = await supabase
+    .from('queue')
+    .select('name, url1, url2')
+    .eq('status', 'waiting');
+
+  if (waitingUsersError) {
+    throw waitingUsersError;
+  }
+
+  const normalizedName = normalizeName(name);
+  const incomingUrls = [normalizeUrl(url1), normalizeUrl(url2)].filter(Boolean);
+  return ((waitingUsers ?? []) as ExistingQueueEntry[]).some((entry) => {
+    if (normalizeName(entry.name ?? '') === normalizedName) {
+      return true;
+    }
+
+    const existingUrls = [normalizeUrl(entry.url1 ?? ''), normalizeUrl(entry.url2 ?? '')].filter(Boolean);
+    return incomingUrls.some((incomingUrl) => existingUrls.includes(incomingUrl));
+  });
+}
+
 export default function Home() {
   const [queue, setQueue] = useState<QueueItem[]>([]);
   const [formData, setFormData] = useState<FormData>({ name: '', url1: '', url2: '', url3: '' });
   const [assignedCode, setAssignedCode] = useState<string | null>(null);
-  const [submissionsOpen] = useState(true);
+  const [submissionsOpen, setSubmissionsOpen] = useState(true);
   
   // New Admin State
   const [adminPassword, setAdminPassword] = useState<string | null>(null);
@@ -86,29 +108,14 @@ export default function Home() {
     const url2 = formData.url2.trim();
     const url3 = formData.url3.trim();
 
-    const { data: waitingUsers, error: waitingUsersError } = await supabase
-      .from('queue')
-      .select('name, url1, url2')
-      .eq('status', 'waiting');
-
-    if (waitingUsersError) {
-      alert('Unable to submit right now. Please try again.');
-      return;
-    }
-
-    const normalizedName = normalizeName(name);
-    const incomingUrls = [normalizeUrl(url1), normalizeUrl(url2)].filter(Boolean);
-    const hasDuplicate = ((waitingUsers ?? []) as ExistingQueueEntry[]).some((entry) => {
-      if (normalizeName(entry.name ?? '') === normalizedName) {
-        return true;
+    try {
+      const hasDuplicate = await isDuplicateSubmission(name, url1, url2);
+      if (hasDuplicate) {
+        alert('A submission with this name or URL is already in the queue.');
+        return;
       }
-
-      const existingUrls = [normalizeUrl(entry.url1 ?? ''), normalizeUrl(entry.url2 ?? '')].filter(Boolean);
-      return incomingUrls.some((incomingUrl) => existingUrls.includes(incomingUrl));
-    });
-
-    if (hasDuplicate) {
-      alert('A submission with this name or URL is already in the queue.');
+    } catch {
+      alert('Unable to submit right now. Please try again.');
       return;
     }
 
@@ -125,6 +132,7 @@ export default function Home() {
     if (!error) {
       setAssignedCode(shortId);
       setFormData({ name: '', url1: '', url2: '', url3: '' });
+      setSubmissionsOpen(true);
     }
   };
 
