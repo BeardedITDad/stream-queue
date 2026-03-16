@@ -111,6 +111,26 @@ export default function Home() {
     // If successful, the realtime subscription will re-order the queue automatically.
   };
 
+  const handleClearAll = async () => {
+    if (!adminPassword) return;
+
+    const confirmed = window.confirm('Clear all waiting users from the queue?');
+    if (!confirmed) return;
+
+    const res = await fetch('/api/clear', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: adminPassword })
+    });
+
+    if (res.status === 401) {
+      alert('Wrong password!');
+      setAdminPassword(null);
+    } else if (!res.ok) {
+      alert('Something went wrong clearing the queue.');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-900 text-white p-10 font-sans flex flex-col justify-between">
       
@@ -160,61 +180,80 @@ export default function Home() {
           )}
         </div>
 
-        {/* The Live Queue */}
-        <div className="bg-gray-800 p-6 rounded-lg shadow-lg h-fit">
-          <div className="flex justify-between items-center mb-4">
-             <h2 className="text-2xl font-bold">Live Queue ({queue.length})</h2>
-             <div className="flex items-center gap-2">
-               <span className="text-xs bg-gray-700 text-gray-200 px-2 py-1 rounded border border-gray-600">
-                 Total in list: {queue.length}
-               </span>
-               {adminPassword && <span className="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded border border-red-500">Admin Mode Active</span>}
-             </div>
-          </div>
-          
-          <div className="flex flex-col gap-3">
-            {queue.length === 0 && <p className="text-gray-400 italic">Queue is empty. Be the first!</p>}
-            {queue.map((user, index) => (
-              <div key={user.id} className={`p-4 rounded border flex justify-between ${user.is_priority ? 'bg-yellow-500/10 border-yellow-500' : 'bg-gray-700 border-gray-600'}`}>
-                
-                <div className="w-full">
-                  <div className="flex justify-between items-center">
-                    <span className="font-bold text-lg">#{index + 1} - {user.name}</span>
-                    {user.is_priority && <span className="text-xs bg-yellow-500 text-black px-2 py-1 font-black rounded uppercase tracking-wider">Priority</span>}
-                  </div>
-                  <div className="text-sm text-blue-400 mt-2 flex flex-col gap-1 overflow-hidden">
-                    <a href={user.url1} target="_blank" rel="noreferrer" className="truncate hover:underline">{user.url1}</a>
-                    {user.url2 && <a href={user.url2} target="_blank" rel="noreferrer" className="truncate hover:underline">{user.url2}</a>}
-                    {user.url3 && <a href={user.url3} target="_blank" rel="noreferrer" className="truncate hover:underline">{user.url3}</a>}
-                  </div>
-                </div>
+        <div className="flex flex-col gap-4">
+          {/* Admin Controls */}
+          {adminPassword && (
+            <div className="bg-gray-800 p-6 rounded-lg shadow-lg border border-red-500/40 h-fit">
+              <h3 className="text-base font-bold uppercase tracking-wide text-red-300">Admin Controls</h3>
+              <p className="text-sm text-gray-300 mt-1">Manage queue actions and future admin settings.</p>
+              <div className="mt-4 flex flex-wrap items-center gap-3">
+                <button
+                  onClick={handleClearAll}
+                  className="bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-4 rounded transition"
+                  title="Remove all waiting users from the queue"
+                >
+                  Clear All
+                </button>
+              </div>
+            </div>
+          )}
 
-                {/* Admin Remove Button */}
-                {adminPassword && (
-                  <div className="ml-4 flex items-center border-l border-gray-600 pl-4">
-                    <div className="flex flex-col gap-2">
-                      {!user.is_priority && (
-                        <button
-                          onClick={() => handleSetPriority(user.id)}
-                          className="bg-yellow-500 hover:bg-yellow-400 text-black font-bold py-2 px-3 rounded transition"
-                          title="Manually set this user to priority"
-                        >
-                          Priority
-                        </button>
-                      )}
-                      <button 
-                        onClick={() => handleRemove(user.id)}
-                        className="bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-3 rounded transition"
-                        title="Remove from queue"
-                      >
-                        X
-                      </button>
+          {/* The Live Queue */}
+          <div className="bg-gray-800 p-6 rounded-lg shadow-lg h-fit">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-bold">Live Queue ({queue.length})</h2>
+              <div className="flex items-center gap-2">
+                <span className="text-xs bg-gray-700 text-gray-200 px-2 py-1 rounded border border-gray-600">
+                  Total in list: {queue.length}
+                </span>
+                {adminPassword && <span className="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded border border-red-500">Admin Mode Active</span>}
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-3">
+              {queue.length === 0 && <p className="text-gray-400 italic">Queue is empty. Be the first!</p>}
+              {queue.map((user, index) => (
+                <div key={user.id} className={`p-4 rounded border flex items-stretch ${user.is_priority ? 'bg-yellow-500/10 border-yellow-500' : 'bg-gray-700 border-gray-600'}`}>
+
+                  <div className="flex-1 min-w-0 pr-3">
+                    <div className="flex justify-between items-center">
+                      <span className="font-bold text-lg">#{index + 1} - {user.name}</span>
+                      {user.is_priority && <span className="text-xs bg-yellow-500 text-black px-2 py-1 font-black rounded uppercase tracking-wider">Priority</span>}
+                    </div>
+                    <div className="text-sm text-blue-400 mt-2 flex flex-col gap-1 overflow-hidden">
+                      <a href={user.url1} target="_blank" rel="noreferrer" className="truncate hover:underline">{user.url1}</a>
+                      {user.url2 && <a href={user.url2} target="_blank" rel="noreferrer" className="truncate hover:underline">{user.url2}</a>}
+                      {user.url3 && <a href={user.url3} target="_blank" rel="noreferrer" className="truncate hover:underline">{user.url3}</a>}
                     </div>
                   </div>
-                )}
 
-              </div>
-            ))}
+                  {/* Admin Remove Button */}
+                  {adminPassword && (
+                    <div className="ml-3 flex w-24 flex-shrink-0 items-center border-l border-gray-600 pl-3">
+                      <div className="flex w-full flex-col gap-2">
+                        {!user.is_priority && (
+                          <button
+                            onClick={() => handleSetPriority(user.id)}
+                            className="w-full bg-yellow-500 hover:bg-yellow-400 text-black font-bold py-2 px-3 rounded transition"
+                            title="Manually set this user to priority"
+                          >
+                            Priority
+                          </button>
+                        )}
+                        <button
+                          onClick={() => handleRemove(user.id)}
+                          className="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-3 rounded transition"
+                          title="Remove from queue"
+                        >
+                          X
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
