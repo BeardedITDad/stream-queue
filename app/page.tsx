@@ -146,10 +146,6 @@ export default function Home() {
     }
   };
 
-  const handleShowDonationInfo = (shortId: string) => {
-    setAssignedCode(shortId);
-  };
-
   return (
     <div className="min-h-screen bg-gray-900 text-white p-10 font-sans flex flex-col justify-between">
       
@@ -240,7 +236,7 @@ export default function Home() {
                       <div className="flex items-center gap-2">
                         {!user.is_priority && assignedCode === user.short_id && (
                           <button
-                            onClick={() => handleShowDonationInfo(user.short_id)}
+                            onClick={() => setAssignedCode(user.short_id)}
                             className="text-xs font-bold px-2 py-1 rounded border border-green-500 text-green-300 hover:bg-green-500/20 transition"
                             title="Show donation info again"
                           >
