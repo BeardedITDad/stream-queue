@@ -50,6 +50,7 @@ export default function Home() {
   const [queue, setQueue] = useState<QueueItem[]>([]);
   const [formData, setFormData] = useState<FormData>({ name: '', url1: '', url2: '', url3: '' });
   const [assignedCode, setAssignedCode] = useState<string | null>(null);
+  const [submissionsOpen] = useState(true);
   
   // New Admin State
   const [adminPassword, setAdminPassword] = useState<string | null>(null);
@@ -74,6 +75,12 @@ export default function Home() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    if (!submissionsOpen) {
+      alert('Submissions are currently closed.');
+      return;
+    }
+
     const name = formData.name.trim();
     const url1 = formData.url1.trim();
     const url2 = formData.url2.trim();

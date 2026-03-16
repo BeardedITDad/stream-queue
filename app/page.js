@@ -26,6 +26,7 @@ export default function Home() {
   const [queue, setQueue] = useState([]);
   const [formData, setFormData] = useState({ name: '', url1: '', url2: '', url3: '' });
   const [assignedCode, setAssignedCode] = useState(null);
+  const [submissionsOpen] = useState(true);
 
   // Fetch queue and subscribe to real-time changes
   useEffect(() => {
@@ -48,6 +49,12 @@ export default function Home() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!submissionsOpen) {
+      alert('Submissions are currently closed.');
+      return;
+    }
+
     const name = formData.name.trim();
     const url1 = formData.url1.trim();
     const url2 = formData.url2.trim();
