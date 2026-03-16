@@ -29,14 +29,19 @@ export default function Home() {
   const [queue, setQueue] = useState<QueueItem[]>([]);
   const [formData, setFormData] = useState<FormData>({ name: '', url1: '', url2: '', url3: '' });
   const [assignedCode, setAssignedCode] = useState<string | null>(null);
+  const [submissionsOpen, setSubmissionsOpen] = useState(true);
   
   // New Admin State
   const [adminPassword, setAdminPassword] = useState<string | null>(null);
 
   useEffect(() => {
     fetchQueue();
+    fetchSubmissionSetting();
     const channel = supabase.channel('public:queue')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'queue' }, fetchQueue)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'queue' }, () => {
+        fetchQueue();
+        fetchSubmissionSetting();
+      })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, []);
@@ -51,8 +56,25 @@ export default function Home() {
     if (data) setQueue(data as QueueItem[]);
   };
 
+  const fetchSubmissionSetting = async () => {
+    try {
+      const res = await fetch('/api/submissions');
+      if (!res.ok) throw new Error('Failed to load submission setting');
+      const data: { submissionsOpen: boolean } = await res.json();
+      setSubmissionsOpen(data.submissionsOpen);
+    } catch {
+      setSubmissionsOpen(true);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    if (!submissionsOpen) {
+      alert('Submissions are currently closed.');
+      return;
+    }
+
     const shortId = Math.floor(1000 + Math.random() * 9000).toString();
     
     const { error } = await supabase.from('queue').insert([{ 
@@ -131,6 +153,30 @@ export default function Home() {
     }
   };
 
+  const handleToggleSubmissions = async () => {
+    if (!adminPassword) return;
+
+    const nextState = !submissionsOpen;
+    const res = await fetch('/api/submissions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: adminPassword, submissionsOpen: nextState }),
+    });
+
+    if (res.status === 401) {
+      alert('Wrong password!');
+      setAdminPassword(null);
+      return;
+    }
+
+    if (!res.ok) {
+      alert('Unable to update submission status.');
+      return;
+    }
+
+    setSubmissionsOpen(nextState);
+  };
+
   return (
     <div className="min-h-screen bg-gray-900 text-white p-10 font-sans flex flex-col justify-between">
       
@@ -161,13 +207,18 @@ export default function Home() {
         
         {/* Submission Form */}
         <div className="bg-gray-800 p-6 rounded-lg shadow-lg h-fit">
-          <h2 className="text-2xl font-bold mb-4">Submit for Review</h2>
+          <h2 className="text-2xl font-bold mb-4">Submit</h2>
           {assignedCode ? (
             <div className="bg-green-600/20 border border-green-500 p-4 rounded text-center">
               <h3 className="text-xl font-bold text-green-400">You are in the queue!</h3>
               <p className="mt-2 text-gray-300">To jump ahead, donate at <strong>ko-fi.com/tylerramsbey</strong> and include this exact code in your message:</p>
               <p className="text-4xl font-black text-white my-4 tracking-widest">{assignedCode}</p>
               <button onClick={() => setAssignedCode(null)} className="text-sm underline text-gray-400 hover:text-white mt-2">Submit another</button>
+            </div>
+          ) : !submissionsOpen ? (
+            <div className="rounded border border-amber-500/70 bg-amber-500/10 p-4 text-amber-200">
+              <h3 className="text-lg font-bold text-amber-300">Submissions are currently closed</h3>
+              <p className="mt-2 text-sm">Additional submissions are currently not being accepted.</p>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -187,6 +238,12 @@ export default function Home() {
               <h3 className="text-base font-bold uppercase tracking-wide text-red-300">Admin Controls</h3>
               <p className="text-sm text-gray-300 mt-1">Manage queue actions and future admin settings.</p>
               <div className="mt-4 flex flex-wrap items-center gap-3">
+                <button
+                  onClick={handleToggleSubmissions}
+                  className={`text-xs font-bold px-3 py-1 rounded border transition ${submissionsOpen ? 'bg-amber-500/20 text-amber-300 border-amber-500 hover:bg-amber-500/30' : 'bg-green-500/20 text-green-300 border-green-500 hover:bg-green-500/30'}`}
+                >
+                  {submissionsOpen ? 'Close Submissions' : 'Open Submissions'}
+                </button>
                 <button
                   onClick={handleClearAll}
                   className="bg-red-600 hover:bg-red-500 text-white font-bold py-2 px-4 rounded transition"
