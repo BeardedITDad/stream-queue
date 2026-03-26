@@ -113,29 +113,42 @@ export default function Home() {
       return;
     }
 
-    const shortId = Math.floor(1000 + Math.random() * 9000).toString();
     const payload = submissionMode === 'question'
       ? {
           name: cleanedName,
           url1: formData.question.trim(),
           url2: '',
           url3: QUESTION_ENTRY_MARKER,
-          short_id: shortId,
+          submissionMode,
         }
       : {
           name: cleanedName,
           url1: formData.url1.trim(),
           url2: formData.url2.trim(),
           url3: formData.url3.trim(),
-          short_id: shortId,
+          submissionMode,
         };
-    
-    const { error } = await supabase.from('queue').insert([payload]);
 
-    if (!error) {
-      setAssignedCode(shortId);
-      setFormData({ name: '', url1: '', url2: '', url3: '', question: '' });
+    const res = await fetch('/api/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    const responseBody = await res.json().catch(() => ({}));
+
+    if (res.status === 409) {
+      alert(responseBody.error ?? 'This submission is already in the queue.');
+      return;
     }
+
+    if (!res.ok) {
+      alert(responseBody.error ?? 'Something went wrong submitting your entry.');
+      return;
+    }
+
+    setAssignedCode(responseBody.shortId ?? null);
+    setFormData({ name: '', url1: '', url2: '', url3: '', question: '' });
   };
 
   // --- NEW: Handle Admin Unlock ---
